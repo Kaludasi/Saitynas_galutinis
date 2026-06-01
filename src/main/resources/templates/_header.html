@@ -1,0 +1,25 @@
+<div th:fragment="_header">
+    <link rel="stylesheet" href="/css/style.css">
+    <nav class="navbar navbar-inverse navbar-fixed-top w-100" style="background-color: burlywood;">
+        <div class="container-fluid">
+            <ul class="nav">
+                <li><a class="navbar-brand fw-bold" style="font-size: 32px" href="#">BANK</a></li>
+                <li><a href="/">Home</a></li>
+                <li><a href="#">Payment</a>
+                    <ul class="dropdown">
+                        <li>
+                            <a href="#">Create new payment</a>
+                        </li>
+                        <li>
+                            <a href="#">View all payments</a>
+                        </li>
+                    </ul>
+                </li>
+                <li><a href="#">Loan</a></li>
+                <li><a href="#">Currency</a></li>
+                <li><a th:href="@{/logout}">Log out</a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+</div>
