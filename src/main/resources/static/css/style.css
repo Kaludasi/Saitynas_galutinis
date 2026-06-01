@@ -1,0 +1,39 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    background-color: #c1dae3;
+}
+
+ul.nav {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    justify-content: flex-start;
+    width: 100%;
+}
+
+ul.nav li {
+    position: relative;
+}
+
+ul.nav li a {
+    display: block;
+    padding: 20px 25px;
+    color: #fff;
+    text-decoration: none;
+    font-size: 18px;
+}
+
+ul.nav li a:hover {
+    background: orange;
+}
+ul.nav li:hover ul.dropdown {
+    display: block;
+}
+
+ul.nav li ul.dropdown li {
+    width: 100%;
+    color: white;
+    text-align: left;
+}
