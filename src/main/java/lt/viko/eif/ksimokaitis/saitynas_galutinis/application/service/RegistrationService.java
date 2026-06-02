@@ -1,56 +1,37 @@
 package lt.viko.eif.ksimokaitis.saitynas_galutinis.application.service;
 
-import org.springframework.jdbc.core.simple.JdbcClient;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.infrastructure.persistence.AppUserEntity;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.infrastructure.persistence.AppUserJpaRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class RegistrationService {
 
-    private final JdbcClient jdbcClient;
+    private final AppUserJpaRepository appUserJpaRepository;
     private final PasswordEncoder passwordEncoder;
 
-    public RegistrationService(JdbcClient jdbcClient, PasswordEncoder passwordEncoder) {
-        this.jdbcClient = jdbcClient;
+    public RegistrationService(AppUserJpaRepository appUserJpaRepository, PasswordEncoder passwordEncoder) {
+        this.appUserJpaRepository = appUserJpaRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
     public void register(String username, String email, String rawPassword) {
-        boolean usernameExists = jdbcClient.sql("""
-                        SELECT COUNT(*)
-                        FROM app_user
-                        WHERE username = :username
-                        """)
-                .param("username", username)
-                .query(Long.class)
-                .single() > 0;
-
-        if (usernameExists) {
+        if (appUserJpaRepository.existsByUsername(username)) {
             throw new IllegalArgumentException("Username is already taken.");
         }
 
-        boolean emailExists = jdbcClient.sql("""
-                        SELECT COUNT(*)
-                        FROM app_user
-                        WHERE email = :email
-                        """)
-                .param("email", email)
-                .query(Long.class)
-                .single() > 0;
-
-        if (emailExists) {
+        if (appUserJpaRepository.existsByEmail(email)) {
             throw new IllegalArgumentException("Email is already registered.");
         }
 
-        jdbcClient.sql("""
-                        INSERT INTO app_user (username, email, password_hash, role, enabled)
-                        VALUES (:username, :email, :passwordHash, :role, :enabled)
-                        """)
-                .param("username", username)
-                .param("email", email)
-                .param("passwordHash", passwordEncoder.encode(rawPassword))
-                .param("role", "USER")
-                .param("enabled", true)
-                .update();
+        AppUserEntity appUser = new AppUserEntity();
+        appUser.setUsername(username);
+        appUser.setEmail(email);
+        appUser.setPasswordHash(passwordEncoder.encode(rawPassword));
+        appUser.setRole("USER");
+        appUser.setEnabled(true);
+
+        appUserJpaRepository.save(appUser);
     }
 }
