@@ -12,11 +12,11 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/currency")
-public class CurrencyExchangeApiController {
+public class CurrencyController {
 
     private final CurrencyExchangeService currencyExchangeService;
 
-    public CurrencyExchangeApiController(CurrencyExchangeService currencyExchangeService) {
+    public CurrencyController(CurrencyExchangeService currencyExchangeService) {
         this.currencyExchangeService = currencyExchangeService;
     }
 
@@ -31,6 +31,11 @@ public class CurrencyExchangeApiController {
             @RequestBody CurrencyExchangeRequest currencyExchangeRequest) {
         CurrencyExchangeResponse response = currencyExchangeService.exchange(currencyExchangeRequest);
         return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @ExceptionHandler({IllegalArgumentException.class, IllegalStateException.class})
+    public ResponseEntity<String> handleExchangeError(RuntimeException exception) {
+        return ResponseEntity.badRequest().body(exception.getMessage());
     }
 
 }

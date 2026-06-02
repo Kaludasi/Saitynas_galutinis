@@ -18,4 +18,9 @@ public class AccountService {
     public List<Account> getAllAccounts() {
         return accountRepository.findAllByOrderByCreatedAtDescIdDesc();
     }
+
+    public Account getAccountById(Long accountId) {
+        return accountRepository.findById(accountId)
+                .orElseThrow(() -> new IllegalArgumentException("Account not found: " + accountId));
+    }
 }

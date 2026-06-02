@@ -7,3 +7,5 @@ databaseChangeLog:
       file: db/changelog/sql/003-add-auth-columns-and-seed-user.sql
   - include:
       file: db/changelog/sql/004-create-accounts-table.sql
+  - include:
+      file: db/changelog/sql/005-create-currency-exchanges-table.sql
