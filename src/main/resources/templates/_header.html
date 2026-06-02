@@ -1,43 +1,33 @@
 <div th:fragment="_header">
-    <link rel="stylesheet" href="/css/style.css">
+    <header class="border-bottom bg-white">
+        <nav class="navbar navbar-expand-lg">
+            <div class="container">
+                <a class="navbar-brand fw-semibold" th:href="@{/main}">BANK</a>
 
-    <nav class="bank-navbar">
-        <ul class="bank-navbar-list">
-            <li>
-                <a class="bank-logo" th:href="@{/main}">BANK</a>
-            </li>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNavbar"
+                        aria-controls="mainNavbar" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
 
-            <li>
-                <a th:href="@{/main}">Home</a>
-            </li>
+                <div class="collapse navbar-collapse" id="mainNavbar">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/main}">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/payment}">Payments</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" th:href="@{/currency}">Currency</a>
+                        </li>
+                    </ul>
 
-            <li class="bank-payment-menu">
-                <a href="#">Payment</a>
-
-                <ul class="bank-payment-dropdown">
-                    <li>
-                        <a th:href="@{/api/payments/new}">Create new payment</a>
-                    </li>
-                    <li>
-                        <a th:href="@{/payment}">View all payments</a>
-                    </li>
-                </ul>
-            </li>
-
-            <li>
-                <a href="#">Loan</a>
-            </li>
-
-            <li>
-                <a th:href="@{/currency}">Currency</a>
-            </li>
-
-            <li>
-                <form th:action="@{/logout}" method="post" class="bank-logout-form">
-                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
-                    <button type="submit" class="bank-logout-button">Log out</button>
-                </form>
-            </li>
-        </ul>
-    </nav>
+                    <form th:action="@{/logout}" method="post" class="d-flex">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
+                        <button type="submit" class="btn btn-outline-secondary btn-sm">Log out</button>
+                    </form>
+                </div>
+            </div>
+        </nav>
+    </header>
 </div>
