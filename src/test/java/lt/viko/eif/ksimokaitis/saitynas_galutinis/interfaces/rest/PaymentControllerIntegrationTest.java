@@ -1,12 +1,17 @@
 package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest;
 
-import lt.viko.eif.ksimokaitis.saitynas_galutinis.infrastructure.persistence.PaymentDatabaseFixture;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.Payment;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.PaymentStatus;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.repository.PaymentRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -21,33 +26,33 @@ class PaymentControllerIntegrationTest {
     private MockMvc mockMvc;
 
     @Autowired
-    private PaymentDatabaseFixture paymentDatabaseFixture;
+    private PaymentRepository paymentRepository;
 
     @BeforeEach
     void setUp() {
-        paymentDatabaseFixture.deleteAll();
+        paymentRepository.deleteAll();
     }
 
     @Test
     void getAllPaymentsReturnsPaymentsOrderedByNewestFirst() throws Exception {
-        paymentDatabaseFixture.insertPayment(
+        paymentRepository.save(new Payment(
                 "LT111111111111111111",
                 "LT222222222222222222",
-                "25.50",
+                new BigDecimal("25.50"),
                 "EUR",
-                "COMPLETED",
+                PaymentStatus.COMPLETED,
                 "First payment",
-                "2026-05-10 10:00:00"
-        );
-        paymentDatabaseFixture.insertPayment(
+                LocalDateTime.of(2026, 5, 10, 10, 0)
+        ));
+        paymentRepository.save(new Payment(
                 "LT333333333333333333",
                 "LT444444444444444444",
-                "99.99",
+                new BigDecimal("99.99"),
                 "USD",
-                "PENDING",
+                PaymentStatus.PENDING,
                 "Second payment",
-                "2026-05-10 11:00:00"
-        );
+                LocalDateTime.of(2026, 5, 10, 11, 0)
+        ));
 
         mockMvc.perform(get("/api/payments"))
                 .andExpect(status().isOk())
