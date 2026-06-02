@@ -25,6 +25,7 @@ dependencies {
     implementation 'org.liquibase:liquibase-core'
     implementation 'org.webjars:bootstrap:5.3.8'
     implementation 'org.thymeleaf:thymeleaf:3.1.5.RELEASE'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'org.postgresql:postgresql'
     annotationProcessor 'org.projectlombok:lombok'
