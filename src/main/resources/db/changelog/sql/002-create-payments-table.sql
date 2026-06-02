@@ -1,3 +1,6 @@
+--liquibase formatted sql
+
+--changeset ksimokaitis:002
 CREATE TABLE IF NOT EXISTS payment (
     id BIGSERIAL PRIMARY KEY,
     sender_account VARCHAR(34) NOT NULL,
