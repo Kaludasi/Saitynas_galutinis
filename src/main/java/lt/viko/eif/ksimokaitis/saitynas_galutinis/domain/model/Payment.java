@@ -9,8 +9,10 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
 
 import java.math.BigDecimal;
+import java.sql.Types;
 import java.time.LocalDateTime;
 
 @Entity
@@ -30,7 +32,8 @@ public class Payment {
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal amount;
 
-    @Column(nullable = false, length = 3)
+    @JdbcTypeCode(Types.CHAR)
+    @Column(nullable = false, columnDefinition = "char(3)")
     private String currency;
 
     @Enumerated(EnumType.STRING)

@@ -7,8 +7,10 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
 
 import java.math.BigDecimal;
+import java.sql.Types;
 import java.time.LocalDateTime;
 
 @Entity
@@ -28,7 +30,8 @@ public class Account {
     @Column(nullable = false, precision = 19, scale = 2)
     private BigDecimal balance;
 
-    @Column(nullable = false, length = 3)
+    @JdbcTypeCode(Types.CHAR)
+    @Column(nullable = false, columnDefinition = "char(3)")
     private String currency;
 
     @Column(name = "created_at", nullable = false)
