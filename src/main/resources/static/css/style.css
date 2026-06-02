@@ -4,6 +4,10 @@ html, body {
     background-color: #c1dae3;
 }
 
+body {
+    font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
 .bank-navbar {
     background-color: burlywood;
     width: 100%;
@@ -58,4 +62,94 @@ html, body {
 .bank-payment-dropdown a {
     padding: 15px 20px;
     white-space: nowrap;
+}
+
+.bank-logout-form {
+    margin: 0;
+}
+
+.bank-logout-button {
+    border: 0;
+    background: transparent;
+    color: white;
+    padding: 20px 25px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.bank-logout-button:hover {
+    background-color: orange;
+}
+
+.bank-login-page {
+    min-height: 100vh;
+    background:
+        radial-gradient(circle at top, rgba(255, 255, 255, 0.6), transparent 35%),
+        linear-gradient(135deg, #d8e9ef 0%, #b8d3dd 45%, #9fbfc9 100%);
+}
+
+.bank-login-shell {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+}
+
+.bank-login-card {
+    width: 100%;
+    max-width: 460px;
+    background: rgba(255, 255, 255, 0.92);
+    border-radius: 24px;
+    padding: 36px 32px;
+}
+
+.bank-login-eyebrow {
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    font-size: 12px;
+    color: #7d6b52;
+}
+
+.bank-login-title {
+    margin-bottom: 8px;
+    color: #3d2e1f;
+}
+
+.bank-login-subtitle {
+    margin-bottom: 24px;
+    color: #5f6872;
+}
+
+.bank-login-button {
+    background-color: #b07a3c;
+    border-color: #b07a3c;
+}
+
+.bank-login-button:hover {
+    background-color: #98662d;
+    border-color: #98662d;
+}
+
+.bank-login-hint {
+    margin-top: 18px;
+    color: #5f6872;
+    text-align: center;
+    font-size: 14px;
+}
+
+.bank-login-footer {
+    margin-top: 18px;
+    text-align: center;
+    color: #5f6872;
+}
+
+.bank-login-footer a {
+    color: #98662d;
+    text-decoration: none;
+}
+
+.bank-login-footer a:hover {
+    text-decoration: underline;
 }
