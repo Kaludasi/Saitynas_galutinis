@@ -28,6 +28,9 @@ import java.util.stream.Collectors;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
+/**
+ * Exposes account-related REST endpoints for authenticated users.
+ */
 @RestController
 @RequestMapping("/api/accounts")
 @Tag(name = "Accounts", description = "Account queries and account opening")
@@ -39,11 +42,23 @@ public class AccountController {
     private final AccountService accountService;
     private final AccountModelAssembler accountModelAssembler;
 
+    /**
+     * Creates the controller for account endpoints.
+     *
+     * @param accountService account business service
+     * @param accountModelAssembler HATEOAS assembler for account responses
+     */
     public AccountController(AccountService accountService, AccountModelAssembler accountModelAssembler) {
         this.accountService = accountService;
         this.accountModelAssembler = accountModelAssembler;
     }
 
+    /**
+     * Lists accounts visible to the authenticated user.
+     *
+     * @param principal authenticated principal
+     * @return HATEOAS collection of account resources
+     */
     @GetMapping
     @Operation(summary = "List user accounts")
     public ResponseEntity<CollectionModel<EntityModel<AccountResponse>>> getAllAccounts(Principal principal) {
@@ -61,6 +76,13 @@ public class AccountController {
                 ));
     }
 
+    /**
+     * Returns a single account visible to the authenticated user.
+     *
+     * @param accountId account identifier
+     * @param principal authenticated principal
+     * @return HATEOAS account resource
+     */
     @GetMapping("/{accountId}")
     @Operation(summary = "Get account by id")
     public ResponseEntity<EntityModel<AccountResponse>> getAccountById(@PathVariable Long accountId, Principal principal) {
@@ -71,6 +93,13 @@ public class AccountController {
                 .body(accountModelAssembler.toModel(account));
     }
 
+    /**
+     * Opens a new account for the authenticated user.
+     *
+     * @param request account opening payload
+     * @param principal authenticated principal
+     * @return created HATEOAS account resource
+     */
     @PostMapping
     @Operation(summary = "Open a new account")
     public ResponseEntity<EntityModel<AccountResponse>> openAccount(@RequestBody AccountOpenRequest request, Principal principal) {
@@ -81,6 +110,12 @@ public class AccountController {
                 .body(accountModelAssembler.toModel(account));
     }
 
+    /**
+     * Resolves account currency by IBAN.
+     *
+     * @param accountNumber account IBAN
+     * @return HATEOAS currency lookup resource
+     */
     @GetMapping("/currency/{accountNumber}")
     @Operation(summary = "Get account currency by IBAN")
     public ResponseEntity<EntityModel<AccountCurrencyResponse>> getAccountCurrency(@PathVariable String accountNumber) {

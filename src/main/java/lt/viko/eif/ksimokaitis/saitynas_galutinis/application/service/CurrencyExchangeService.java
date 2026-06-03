@@ -22,6 +22,9 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Performs currency exchange operations between user-owned accounts and records audit history.
+ */
 @Service
 public class CurrencyExchangeService {
 
@@ -38,6 +41,14 @@ public class CurrencyExchangeService {
     @Value("${currency.api.key}")
     private String currencyApiKey;
 
+    /**
+     * Creates the service with repositories needed for balance updates and audit storage.
+     *
+     * @param accountRepository account persistence gateway
+     * @param currencyExchangeRepository exchange audit persistence gateway
+     * @param paymentRepository payment persistence gateway
+     * @param appUserJpaRepository user persistence gateway
+     */
     public CurrencyExchangeService(
             AccountRepository accountRepository,
             CurrencyExchangeRepository currencyExchangeRepository,
@@ -50,6 +61,13 @@ public class CurrencyExchangeService {
         this.appUserJpaRepository = appUserJpaRepository;
     }
 
+    /**
+     * Exchanges money between two accounts owned by the authenticated user.
+     *
+     * @param request exchange request payload
+     * @param username authenticated username
+     * @return exchange result including updated balances
+     */
     @Transactional
     public CurrencyExchangeResponse exchange(CurrencyExchangeRequest request, String username) {
         validateExchangeRequest(request);
@@ -86,10 +104,22 @@ public class CurrencyExchangeService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
     }
 
+    /**
+     * Returns exchange history visible to the authenticated user.
+     *
+     * @param username authenticated username
+     * @return ordered exchange history
+     */
     public List<CurrencyExchange> getExchangeHistoryForUsername(String username) {
         return currencyExchangeRepository.findAllVisibleByAppUserId(resolveUserId(username));
     }
 
+    /**
+     * Returns exchange history mapped to response DTOs for web rendering.
+     *
+     * @param username authenticated username
+     * @return exchange history response list
+     */
     public List<CurrencyExchangeHistoryResponse> getExchangeHistoryResponsesForUsername(String username) {
         return getExchangeHistoryForUsername(username).stream()
                 .map(this::toHistoryResponse)
@@ -137,6 +167,13 @@ public class CurrencyExchangeService {
         }
     }
 
+    /**
+     * Fetches the latest exchange rate from the external currency API.
+     *
+     * @param sourceCurrency source currency code
+     * @param targetCurrency target currency code
+     * @return exchange rate between the currencies
+     */
     protected BigDecimal fetchExchangeRate(String sourceCurrency, String targetCurrency) {
         String apiUrl = UriComponentsBuilder
                 .fromUriString(LATEST_RATES_URL)
@@ -153,6 +190,13 @@ public class CurrencyExchangeService {
         return apiResponse.data().get(targetCurrency).value();
     }
 
+    /**
+     * Calculates converted amount using the provided rate.
+     *
+     * @param amount source amount
+     * @param exchangeRate exchange rate value
+     * @return converted amount rounded to two decimals
+     */
     protected BigDecimal calculateConvertedAmount(BigDecimal amount, BigDecimal exchangeRate) {
         return amount.multiply(exchangeRate).setScale(2, RoundingMode.HALF_UP);
     }

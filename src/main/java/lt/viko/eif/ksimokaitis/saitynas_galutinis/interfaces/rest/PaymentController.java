@@ -23,6 +23,9 @@ import java.util.stream.Collectors;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
+/**
+ * Exposes payment history and transfer endpoints for authenticated users.
+ */
 @RestController
 @RequestMapping("/api/payments")
 @Tag(name = "Payments", description = "Payment history and transfers")
@@ -34,6 +37,13 @@ public class PaymentController {
     private final PaymentModelAssembler paymentModelAssembler;
     private final PaymentTransferModelAssembler paymentTransferModelAssembler;
 
+    /**
+     * Creates the controller for payment endpoints.
+     *
+     * @param paymentService payment business service
+     * @param paymentModelAssembler HATEOAS assembler for payment resources
+     * @param paymentTransferModelAssembler HATEOAS assembler for transfer responses
+     */
     public PaymentController(
             PaymentService paymentService,
             PaymentModelAssembler paymentModelAssembler,
@@ -44,6 +54,12 @@ public class PaymentController {
         this.paymentTransferModelAssembler = paymentTransferModelAssembler;
     }
 
+    /**
+     * Lists payments visible to the authenticated user.
+     *
+     * @param principal authenticated principal
+     * @return HATEOAS collection of payment resources
+     */
     @GetMapping
     @Operation(summary = "List visible payments")
     public ResponseEntity<CollectionModel<EntityModel<PaymentResponse>>> getAllPayments(Principal principal) {
@@ -61,6 +77,13 @@ public class PaymentController {
                 ));
     }
 
+    /**
+     * Returns a single payment visible to the authenticated user.
+     *
+     * @param paymentId payment identifier
+     * @param principal authenticated principal
+     * @return HATEOAS payment resource
+     */
     @GetMapping("/{paymentId}")
     @Operation(summary = "Get payment by id")
     public ResponseEntity<EntityModel<PaymentResponse>> getPaymentById(@PathVariable Long paymentId, Principal principal) {
@@ -70,6 +93,13 @@ public class PaymentController {
                 .body(paymentModelAssembler.toModel(paymentService.getPaymentByIdForUsername(principal.getName(), paymentId)));
     }
 
+    /**
+     * Creates a new payment transfer for the authenticated user.
+     *
+     * @param request transfer request payload
+     * @param principal authenticated principal
+     * @return created transfer response with link to the stored payment
+     */
     @PostMapping("/transfer")
     @Operation(summary = "Create payment transfer")
     public ResponseEntity<EntityModel<PaymentTransferResponse>> transferPayment(@RequestBody PaymentTransferRequest request, Principal principal) {
