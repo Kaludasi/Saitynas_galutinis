@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -28,8 +29,9 @@ public class CurrencyController {
 
     @PostMapping("/exchange")
     public ResponseEntity<CurrencyExchangeResponse> exchangeCurrency(
-            @RequestBody CurrencyExchangeRequest currencyExchangeRequest) {
-        CurrencyExchangeResponse response = currencyExchangeService.exchange(currencyExchangeRequest);
+            @RequestBody CurrencyExchangeRequest currencyExchangeRequest,
+            Principal principal) {
+        CurrencyExchangeResponse response = currencyExchangeService.exchange(currencyExchangeRequest, principal.getName());
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
