@@ -1,5 +1,7 @@
 package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.application.service.PaymentService;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.Payment;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.PaymentResponse;
@@ -23,6 +25,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/api/payments")
+@Tag(name = "Payments", description = "Payment history and transfers")
 public class PaymentController {
 
     private static final CacheControl PRIVATE_PAYMENT_CACHE = CacheControl.noStore().cachePrivate();
@@ -42,6 +45,7 @@ public class PaymentController {
     }
 
     @GetMapping
+    @Operation(summary = "List visible payments")
     public ResponseEntity<CollectionModel<EntityModel<PaymentResponse>>> getAllPayments(Principal principal) {
         List<EntityModel<PaymentResponse>> payments = paymentService.getAllPaymentsForUsername(principal.getName())
                 .stream()
@@ -58,6 +62,7 @@ public class PaymentController {
     }
 
     @GetMapping("/{paymentId}")
+    @Operation(summary = "Get payment by id")
     public ResponseEntity<EntityModel<PaymentResponse>> getPaymentById(@PathVariable Long paymentId, Principal principal) {
         return ResponseEntity.ok()
                 .cacheControl(PRIVATE_PAYMENT_CACHE)
@@ -66,6 +71,7 @@ public class PaymentController {
     }
 
     @PostMapping("/transfer")
+    @Operation(summary = "Create payment transfer")
     public ResponseEntity<EntityModel<PaymentTransferResponse>> transferPayment(@RequestBody PaymentTransferRequest request, Principal principal) {
         Payment payment = paymentService.transferPayment(request, principal);
         PaymentTransferResponse response = new PaymentTransferResponse("Payment was sent successfully", payment.getId());

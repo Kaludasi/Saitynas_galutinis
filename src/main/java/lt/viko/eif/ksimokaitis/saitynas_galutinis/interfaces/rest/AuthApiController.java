@@ -1,5 +1,7 @@
 package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.application.service.RegistrationService;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.infrastructure.security.ApiAuthenticationService;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.ApiTokenRequest;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "Authentication", description = "Registration and API token issuance")
 public class AuthApiController {
 
     private final RegistrationService registrationService;
@@ -33,6 +36,7 @@ public class AuthApiController {
     }
 
     @PostMapping("/register")
+    @Operation(summary = "Register a new user", description = "Creates a new user and opens the first account in the selected currency.")
     public ResponseEntity<RegistrationResponse> register(@RequestBody RegistrationRequest request) {
         registrationRequestValidator.validate(request);
 
@@ -49,6 +53,7 @@ public class AuthApiController {
     }
 
     @PostMapping("/token")
+    @Operation(summary = "Issue API token", description = "Returns a bearer token for calling stateless REST endpoints.")
     public ResponseEntity<ApiTokenResponse> issueToken(@RequestBody ApiTokenRequest request) {
         String token = apiAuthenticationService.issueToken(request.getUsername(), request.getPassword());
         return ResponseEntity.ok(new ApiTokenResponse(token));
