@@ -8,11 +8,13 @@ import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.CurrencyOptio
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.assembler.CurrencyExchangeModelAssembler;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,6 +24,8 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 @RestController
 @RequestMapping("/api/currency")
 public class CurrencyController {
+
+    private static final CacheControl PRIVATE_CURRENCY_LIST_CACHE = CacheControl.maxAge(Duration.ofHours(6)).cachePrivate().mustRevalidate();
 
     private final CurrencyExchangeService currencyExchangeService;
     private final CurrencyExchangeModelAssembler currencyExchangeModelAssembler;
@@ -36,7 +40,7 @@ public class CurrencyController {
 
 
     @GetMapping("/all")
-    public CollectionModel<EntityModel<CurrencyOptionResponse>> allCurrencies() {
+    public ResponseEntity<CollectionModel<EntityModel<CurrencyOptionResponse>>> allCurrencies() {
         List<EntityModel<CurrencyOptionResponse>> currencies = currencyExchangeService.getCurrencies()
                 .stream()
                 .map(currency -> EntityModel.of(new CurrencyOptionResponse(currency),
@@ -44,10 +48,13 @@ public class CurrencyController {
                         linkTo(methodOn(CurrencyController.class).exchangeCurrency(null, null)).withRel("exchange")))
                 .collect(Collectors.toList());
 
-        return CollectionModel.of(
-                currencies,
-                linkTo(methodOn(CurrencyController.class).allCurrencies()).withSelfRel()
-        );
+        return ResponseEntity.ok()
+                .cacheControl(PRIVATE_CURRENCY_LIST_CACHE)
+                .varyBy("Authorization")
+                .body(CollectionModel.of(
+                        currencies,
+                        linkTo(methodOn(CurrencyController.class).allCurrencies()).withSelfRel()
+                ));
     }
 
     @PostMapping("/exchange")
@@ -55,7 +62,10 @@ public class CurrencyController {
             @RequestBody CurrencyExchangeRequest currencyExchangeRequest,
             Principal principal) {
         CurrencyExchangeResponse response = currencyExchangeService.exchange(currencyExchangeRequest, principal.getName());
-        return new ResponseEntity<>(currencyExchangeModelAssembler.toModel(response), HttpStatus.OK);
+        return ResponseEntity.status(HttpStatus.OK)
+                .cacheControl(CacheControl.noStore())
+                .varyBy("Authorization")
+                .body(currencyExchangeModelAssembler.toModel(response));
     }
 
 }

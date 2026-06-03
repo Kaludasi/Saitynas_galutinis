@@ -121,8 +121,16 @@
             beforeSend: function (xhr) {
                 xhr.setRequestHeader("Authorization", "Bearer " + apiToken);
             },
-            success: function (accounts) {
-                allAccounts = accounts;
+            success: function (response) {
+                const embedded = response && response._embedded
+                    ? Object.values(response._embedded)[0]
+                    : [];
+
+                allAccounts = Array.isArray(embedded)
+                    ? embedded.map(function (entry) {
+                        return entry.content ? entry.content : entry;
+                    })
+                    : [];
                 syncAccountSelects();
             }
         });

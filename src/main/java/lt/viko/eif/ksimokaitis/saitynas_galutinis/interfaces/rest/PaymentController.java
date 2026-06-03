@@ -8,6 +8,7 @@ import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.assembler.Paym
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.assembler.PaymentTransferModelAssembler;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +23,8 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 @RestController
 @RequestMapping("/api/payments")
 public class PaymentController {
+
+    private static final CacheControl PRIVATE_PAYMENT_CACHE = CacheControl.noStore().cachePrivate();
 
     private final PaymentService paymentService;
     private final PaymentModelAssembler paymentModelAssembler;
@@ -38,27 +41,36 @@ public class PaymentController {
     }
 
     @GetMapping
-    public CollectionModel<EntityModel<Payment>> getAllPayments() {
+    public ResponseEntity<CollectionModel<EntityModel<Payment>>> getAllPayments() {
         List<EntityModel<Payment>> payments = paymentService.getAllPayments()
                 .stream()
                 .map(paymentModelAssembler::toModel)
                 .collect(Collectors.toList());
 
-        return CollectionModel.of(
-                payments,
-                linkTo(methodOn(PaymentController.class).getAllPayments()).withSelfRel()
-        );
+        return ResponseEntity.ok()
+                .cacheControl(PRIVATE_PAYMENT_CACHE)
+                .varyBy("Authorization")
+                .body(CollectionModel.of(
+                        payments,
+                        linkTo(methodOn(PaymentController.class).getAllPayments()).withSelfRel()
+                ));
     }
 
     @GetMapping("/{paymentId}")
-    public EntityModel<Payment> getPaymentById(@PathVariable Long paymentId) {
-        return paymentModelAssembler.toModel(paymentService.getPaymentById(paymentId));
+    public ResponseEntity<EntityModel<Payment>> getPaymentById(@PathVariable Long paymentId) {
+        return ResponseEntity.ok()
+                .cacheControl(PRIVATE_PAYMENT_CACHE)
+                .varyBy("Authorization")
+                .body(paymentModelAssembler.toModel(paymentService.getPaymentById(paymentId)));
     }
 
     @PostMapping("/transfer")
     public ResponseEntity<EntityModel<PaymentTransferResponse>> transferPayment(@RequestBody PaymentTransferRequest request, Principal principal) {
         Payment payment = paymentService.transferPayment(request, principal);
         PaymentTransferResponse response = new PaymentTransferResponse("Payment was sent successfully", payment.getId());
-        return new ResponseEntity<>(paymentTransferModelAssembler.toModel(response), HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .cacheControl(CacheControl.noStore())
+                .varyBy("Authorization")
+                .body(paymentTransferModelAssembler.toModel(response));
     }
 }
