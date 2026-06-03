@@ -1,6 +1,7 @@
 package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.assembler;
 
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.Payment;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.PaymentResponse;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.AccountController;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.PaymentController;
 import org.springframework.hateoas.EntityModel;
@@ -11,14 +12,25 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @Component
-public class PaymentModelAssembler implements RepresentationModelAssembler<Payment, EntityModel<Payment>> {
+public class PaymentModelAssembler implements RepresentationModelAssembler<Payment, EntityModel<PaymentResponse>> {
 
     @Override
-    public EntityModel<Payment> toModel(Payment payment) {
-        return EntityModel.of(payment,
-                linkTo(methodOn(PaymentController.class).getPaymentById(payment.getId(), null)).withSelfRel(),
+    public EntityModel<PaymentResponse> toModel(Payment payment) {
+        PaymentResponse response = new PaymentResponse(
+                payment.getId(),
+                payment.getSenderAccount(),
+                payment.getReceiverAccount(),
+                payment.getAmount(),
+                payment.getCurrency(),
+                payment.getStatus(),
+                payment.getDescription(),
+                payment.getCreatedAt()
+        );
+
+        return EntityModel.of(response,
+                linkTo(methodOn(PaymentController.class).getPaymentById(response.id(), null)).withSelfRel(),
                 linkTo(methodOn(PaymentController.class).getAllPayments(null)).withRel("payments"),
-                linkTo(methodOn(AccountController.class).getAccountCurrency(payment.getSenderAccount())).withRel("sender-currency"),
-                linkTo(methodOn(AccountController.class).getAccountCurrency(payment.getReceiverAccount())).withRel("receiver-currency"));
+                linkTo(methodOn(AccountController.class).getAccountCurrency(response.senderAccount())).withRel("sender-currency"),
+                linkTo(methodOn(AccountController.class).getAccountCurrency(response.receiverAccount())).withRel("receiver-currency"));
     }
 }

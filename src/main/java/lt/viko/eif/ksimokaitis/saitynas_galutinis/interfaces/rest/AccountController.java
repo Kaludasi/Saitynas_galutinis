@@ -4,6 +4,7 @@ import lt.viko.eif.ksimokaitis.saitynas_galutinis.application.service.AccountSer
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.Account;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.AccountCurrencyResponse;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.AccountOpenRequest;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.AccountResponse;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.assembler.AccountModelAssembler;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
@@ -41,8 +42,8 @@ public class AccountController {
     }
 
     @GetMapping
-    public ResponseEntity<CollectionModel<EntityModel<Account>>> getAllAccounts(Principal principal) {
-        List<EntityModel<Account>> accounts = accountService.getAccountsForUsername(principal.getName())
+    public ResponseEntity<CollectionModel<EntityModel<AccountResponse>>> getAllAccounts(Principal principal) {
+        List<EntityModel<AccountResponse>> accounts = accountService.getAccountsForUsername(principal.getName())
                 .stream()
                 .map(accountModelAssembler::toModel)
                 .collect(Collectors.toList());
@@ -57,7 +58,7 @@ public class AccountController {
     }
 
     @GetMapping("/{accountId}")
-    public ResponseEntity<EntityModel<Account>> getAccountById(@PathVariable Long accountId, Principal principal) {
+    public ResponseEntity<EntityModel<AccountResponse>> getAccountById(@PathVariable Long accountId, Principal principal) {
         Account account = accountService.getAccountForUsernameById(principal.getName(), accountId);
         return ResponseEntity.ok()
                 .cacheControl(PRIVATE_ACCOUNT_CACHE)
@@ -66,7 +67,7 @@ public class AccountController {
     }
 
     @PostMapping
-    public ResponseEntity<EntityModel<Account>> openAccount(@RequestBody AccountOpenRequest request, Principal principal) {
+    public ResponseEntity<EntityModel<AccountResponse>> openAccount(@RequestBody AccountOpenRequest request, Principal principal) {
         Account account = accountService.openAccountForUsername(principal.getName(), request.getCurrency());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .cacheControl(CacheControl.noStore())

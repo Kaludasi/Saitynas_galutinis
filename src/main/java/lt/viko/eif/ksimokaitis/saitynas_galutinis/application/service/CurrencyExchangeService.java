@@ -9,7 +9,9 @@ import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.repository.CurrencyExch
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.repository.PaymentRepository;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.infrastructure.persistence.AppUserEntity;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.infrastructure.persistence.AppUserJpaRepository;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.CurrencyExchangeRequest;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.CurrencyExchangeHistoryResponse;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.CurrencyExchangeResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
