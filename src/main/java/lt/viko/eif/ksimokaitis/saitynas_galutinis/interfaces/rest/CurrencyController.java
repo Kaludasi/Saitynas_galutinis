@@ -2,9 +2,12 @@ package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest;
 
 
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.application.service.CurrencyExchangeService;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.CurrencyExchange;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.CurrencyExchangeRequest;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.CurrencyExchangeResponse;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.CurrencyExchangeHistoryResponse;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.CurrencyOptionResponse;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.assembler.CurrencyExchangeHistoryModelAssembler;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.assembler.CurrencyExchangeModelAssembler;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
@@ -29,13 +32,16 @@ public class CurrencyController {
 
     private final CurrencyExchangeService currencyExchangeService;
     private final CurrencyExchangeModelAssembler currencyExchangeModelAssembler;
+    private final CurrencyExchangeHistoryModelAssembler currencyExchangeHistoryModelAssembler;
 
     public CurrencyController(
             CurrencyExchangeService currencyExchangeService,
-            CurrencyExchangeModelAssembler currencyExchangeModelAssembler
+            CurrencyExchangeModelAssembler currencyExchangeModelAssembler,
+            CurrencyExchangeHistoryModelAssembler currencyExchangeHistoryModelAssembler
     ) {
         this.currencyExchangeService = currencyExchangeService;
         this.currencyExchangeModelAssembler = currencyExchangeModelAssembler;
+        this.currencyExchangeHistoryModelAssembler = currencyExchangeHistoryModelAssembler;
     }
 
 
@@ -54,6 +60,22 @@ public class CurrencyController {
                 .body(CollectionModel.of(
                         currencies,
                         linkTo(methodOn(CurrencyController.class).allCurrencies()).withSelfRel()
+                ));
+    }
+
+    @GetMapping("/exchanges")
+    public ResponseEntity<CollectionModel<EntityModel<CurrencyExchangeHistoryResponse>>> getExchangeHistory(Principal principal) {
+        List<EntityModel<CurrencyExchangeHistoryResponse>> exchanges = currencyExchangeService.getExchangeHistoryForUsername(principal.getName())
+                .stream()
+                .map(currencyExchangeHistoryModelAssembler::toModel)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok()
+                .cacheControl(CacheControl.noStore().cachePrivate())
+                .varyBy("Authorization")
+                .body(CollectionModel.of(
+                        exchanges,
+                        linkTo(methodOn(CurrencyController.class).getExchangeHistory(principal)).withSelfRel()
                 ));
     }
 

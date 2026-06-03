@@ -79,4 +79,40 @@ public class CurrencyExchange {
             createdAt = LocalDateTime.now();
         }
     }
+
+    public Long getId() {
+        return id;
+    }
+
+    public Account getSourceAccount() {
+        return sourceAccount;
+    }
+
+    public Account getTargetAccount() {
+        return targetAccount;
+    }
+
+    public BigDecimal getSourceAmount() {
+        return sourceAmount;
+    }
+
+    public String getSourceCurrency() {
+        return sourceCurrency;
+    }
+
+    public BigDecimal getTargetAmount() {
+        return targetAmount;
+    }
+
+    public String getTargetCurrency() {
+        return targetCurrency;
+    }
+
+    public BigDecimal getExchangeRate() {
+        return exchangeRate;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
 }

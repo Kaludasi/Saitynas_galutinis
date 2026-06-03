@@ -16,8 +16,8 @@ public class PaymentModelAssembler implements RepresentationModelAssembler<Payme
     @Override
     public EntityModel<Payment> toModel(Payment payment) {
         return EntityModel.of(payment,
-                linkTo(methodOn(PaymentController.class).getPaymentById(payment.getId())).withSelfRel(),
-                linkTo(methodOn(PaymentController.class).getAllPayments()).withRel("payments"),
+                linkTo(methodOn(PaymentController.class).getPaymentById(payment.getId(), null)).withSelfRel(),
+                linkTo(methodOn(PaymentController.class).getAllPayments(null)).withRel("payments"),
                 linkTo(methodOn(AccountController.class).getAccountCurrency(payment.getSenderAccount())).withRel("sender-currency"),
                 linkTo(methodOn(AccountController.class).getAccountCurrency(payment.getReceiverAccount())).withRel("receiver-currency"));
     }

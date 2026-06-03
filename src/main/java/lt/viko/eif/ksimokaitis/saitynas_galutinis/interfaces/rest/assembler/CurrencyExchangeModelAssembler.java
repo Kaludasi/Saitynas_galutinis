@@ -18,6 +18,6 @@ public class CurrencyExchangeModelAssembler {
                 linkTo(methodOn(CurrencyController.class).allCurrencies()).withRel("currencies"),
                 linkTo(methodOn(AccountController.class).getAccountById(response.getSourceAccountId(), null)).withRel("source-account"),
                 linkTo(methodOn(AccountController.class).getAccountById(response.getTargetAccountId(), null)).withRel("target-account"),
-                linkTo(methodOn(PaymentController.class).getAllPayments()).withRel("payments"));
+                linkTo(methodOn(PaymentController.class).getAllPayments(null)).withRel("payments"));
     }
 }

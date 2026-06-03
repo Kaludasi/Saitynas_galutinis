@@ -1,6 +1,7 @@
 package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.controller;
 
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.application.service.AccountService;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.application.service.CurrencyExchangeService;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.application.service.PaymentService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -15,27 +16,28 @@ public class PaymentModelController {
 
     private final PaymentService paymentService;
     private final AccountService accountService;
+    private final CurrencyExchangeService currencyExchangeService;
 
-    public PaymentModelController(PaymentService paymentService, AccountService accountService) {
+    public PaymentModelController(
+            PaymentService paymentService,
+            AccountService accountService,
+            CurrencyExchangeService currencyExchangeService
+    ) {
         this.paymentService = paymentService;
         this.accountService = accountService;
+        this.currencyExchangeService = currencyExchangeService;
     }
 
     @GetMapping
-    public String showPayments(Model model) {
-        model.addAttribute("payments", paymentService.getAllPayments());
+    public String showPayments(Model model, Principal principal) {
+        model.addAttribute("payments", paymentService.getAllPaymentsForUsername(principal.getName()));
+        model.addAttribute("exchangeHistory", currencyExchangeService.getExchangeHistoryForUsername(principal.getName()));
         return "_payments";
     }
 
     @GetMapping("/transfer")
     public String showTransferPage(Model model, Principal principal) {
-        String username = principal.getName();
-
-        model.addAttribute("accounts", accountService.getAllAccounts());
-        model.addAttribute(
-                "accounts",
-                accountService.getAccountsByUsername(username)
-        );
+        model.addAttribute("accounts", accountService.getAccountsForUsername(principal.getName()));
         return "_paymentTransferPage";
     }
 
