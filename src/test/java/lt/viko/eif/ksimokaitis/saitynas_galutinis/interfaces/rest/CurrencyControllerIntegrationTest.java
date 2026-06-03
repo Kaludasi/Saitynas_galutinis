@@ -57,4 +57,21 @@ class CurrencyControllerIntegrationTest extends ApiIntegrationTestSupport {
         assertThat(exchanges).hasSize(1);
         assertThat(exchanges.get(0).get("sourceAccountIban").asText()).isEqualTo("LT131313131313131313");
     }
+
+    @Test
+    void exchangeHistoryReturnsEmptyCollectionWhenUserHasNoExchanges() throws Exception {
+        AppUserEntity user = createUser("empty.exchange", "empty.exchange@example.com", "Empty#2026");
+        createAccount("LT171717171717171717", "empty.exchange", "EUR", new BigDecimal("15.00"), user.getId());
+        String token = issueToken("empty.exchange", "Empty#2026");
+
+        MvcResult result = mockMvc.perform(get("/api/currency/exchanges")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(token)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        JsonNode root = objectMapper.readTree(result.getResponse().getContentAsString());
+        JsonNode exchanges = firstEmbeddedArray(root);
+
+        assertThat(exchanges).isEmpty();
+    }
 }
