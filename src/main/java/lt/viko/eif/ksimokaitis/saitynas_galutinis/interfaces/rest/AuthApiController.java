@@ -1,6 +1,9 @@
 package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest;
 
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.application.service.RegistrationService;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.infrastructure.security.ApiAuthenticationService;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.ApiTokenRequest;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.ApiTokenResponse;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.RegistrationRequest;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.RegistrationResponse;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.validator.RegistrationRequestValidator;
@@ -17,13 +20,16 @@ public class AuthApiController {
 
     private final RegistrationService registrationService;
     private final RegistrationRequestValidator registrationRequestValidator;
+    private final ApiAuthenticationService apiAuthenticationService;
 
     public AuthApiController(
             RegistrationService registrationService,
-            RegistrationRequestValidator registrationRequestValidator
+            RegistrationRequestValidator registrationRequestValidator,
+            ApiAuthenticationService apiAuthenticationService
     ) {
         this.registrationService = registrationService;
         this.registrationRequestValidator = registrationRequestValidator;
+        this.apiAuthenticationService = apiAuthenticationService;
     }
 
     @PostMapping("/register")
@@ -40,5 +46,11 @@ public class AuthApiController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(new RegistrationResponse("Registration completed successfully."));
+    }
+
+    @PostMapping("/token")
+    public ResponseEntity<ApiTokenResponse> issueToken(@RequestBody ApiTokenRequest request) {
+        String token = apiAuthenticationService.issueToken(request.getUsername(), request.getPassword());
+        return ResponseEntity.ok(new ApiTokenResponse(token));
     }
 }
