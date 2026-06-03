@@ -2,9 +2,11 @@ package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest;
 
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.application.service.PaymentService;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.Payment;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.PaymentTransferRequest;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.PaymentTransferResponse;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -21,5 +23,12 @@ public class PaymentController {
     @GetMapping
     public List<Payment> getAllPayments() {
         return paymentService.getAllPayments();
+    }
+
+    @PostMapping("/transfer")
+    public ResponseEntity<PaymentTransferResponse> transferPayment(@RequestBody PaymentTransferRequest request) {
+        paymentService.transferPayment(request);
+        PaymentTransferResponse response = new PaymentTransferResponse("Payment was sent successfully");
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 }

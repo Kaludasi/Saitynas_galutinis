@@ -2,7 +2,9 @@ package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest;
 
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.application.service.AccountService;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.Account;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -22,5 +24,11 @@ public class AccountController {
     @GetMapping
     public List<Account> getAllAccounts(Principal principal) {
         return accountService.getAccountsForUsername(principal.getName());
+    }
+
+    @GetMapping("/currency/{accountNumber}")
+    public ResponseEntity<String> getAccountCurrency(@PathVariable String accountNumber) {
+        String currency = accountService.getCurrencyByAccountNumber(accountNumber);
+        return ResponseEntity.ok(currency);
     }
 }

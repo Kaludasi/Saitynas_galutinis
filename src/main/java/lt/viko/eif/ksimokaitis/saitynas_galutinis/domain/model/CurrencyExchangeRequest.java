@@ -1,14 +1,17 @@
 package lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model;
 
+import lombok.Data;
+
 import java.math.BigDecimal;
 
-public record CurrencyExchangeRequest (
+@Data
+public class CurrencyExchangeRequest {
 
-    Long sourceAccountId,
-    Long targetAccountId,
-    BigDecimal amount,
-    String fromCurrency,
-    String toCurrency
-)
+    private Long sourceAccountId;
+    private Long targetAccountId;
+    private BigDecimal amount;
+    private String fromCurrency;
+    private String toCurrency;
 
-{}
+}
+

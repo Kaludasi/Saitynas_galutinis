@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title th:text="${pageTitle}">Payment transferring</title>
+    <meta name="_csrf" th:content="${_csrf.token}">
+    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+</head>
+<body>
+<div th:replace="_header :: _header"></div>
+
+<div class="container mt-5">
+    <h1>Payment</h1>
+
+    <form id="paymentTransferForm">
+        <div class="mb-3">
+            <label for="senderAccount">Debtor account</label>
+
+            <select id="senderAccount" class="form-control">
+                <option value="">Select account</option>
+
+                <option th:each="account : ${accounts}"
+                        th:value="${account.iban}"
+                        th:text="${account.iban}"
+
+                     th:attr="data-currency=${account.currency}">
+<!--                    th:data-currency="${account.currency}">-->
+
+                </option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="receiverAccount"> Creditor account</label>
+            <input id="receiverAccount" type="text" class="form-control">
+        </div>
+        <div class="mb-3">
+            <label for="amount">Amount</label>
+            <input id="amount" type="number" step="0.01" class="form-control">
+        </div>
+
+        <div class="mb-3">
+            <label for="currency">Currency</label>
+            <input id="currency" type="text" class="form-control" readonly>
+        </div>
+
+        <div class="mb-3">
+            <label for="description">Description</label>
+            <input id="description" type="text" class="form-control">
+        </div>
+
+        <button type="submit" class="btn btn-primary">Send payment</button>
+    </form>
+    <div id="successMessage" class="alert alert-success mt-4" style="display: none;">
+        Payment was sent successfully.
+    </div>
+
+    <div id="errorMessage" class="alert alert-danger mt-4" style="display: none;">
+        Payment transfer failed.
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    $("#senderAccount").change(function () {
+        const currency = $("#senderAccount option:selected").data("currency");
+        $("#currency").val(currency || "");
+    });
+
+    $("#paymentTransferForm").submit(function (event) {
+        event.preventDefault();
+
+        const paymentRequest = {
+            senderAccount: $("#senderAccount").val(),
+            receiverAccount: $("#receiverAccount").val(),
+            amount: $("#amount").val(),
+            currency: $("#currency").val(),
+            description: $("#description").val()
+        };
+        const csrfToken = $("meta[name='_csrf']").attr("content");
+        const csrfHeader = $("meta[name='_csrf_header']").attr("content");
+
+        $.ajax({
+            url: "/api/payments/transfer",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify(paymentRequest),
+            beforeSend: function (xhr) {
+                xhr.setRequestHeader(csrfHeader, csrfToken);
+            },
+            success: function () {
+                $("#successMessage").show();
+                $("#errorMessage").hide();
+                $("#paymentTransferForm")[0].reset();
+            },
+            // error: function () {
+            //     $("#errorMessage").show();
+            //     $("#successMessage").hide();
+            // }
+            error: function (xhr) {
+                $("#errorMessage")
+                    .text("Payment transfer failed: " + xhr.status)
+                    .show();
+
+                $("#successMessage").hide();
+
+                console.log(xhr.responseText);
+            }
+        });
+    });
+</script>
+</body>
+
+</html>
