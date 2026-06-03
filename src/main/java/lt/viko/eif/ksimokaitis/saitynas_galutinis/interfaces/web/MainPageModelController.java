@@ -1,4 +1,4 @@
-package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.controller;
+package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.web;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -16,3 +16,4 @@ public class MainPageModelController {
         return "_mainPage";
     }
 }
+

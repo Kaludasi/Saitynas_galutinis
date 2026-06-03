@@ -1,4 +1,4 @@
-package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.controller;
+package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.web;
 
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.infrastructure.security.ApiTokenService;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -29,3 +29,4 @@ public class ViewSecurityModelAdvice {
         return apiTokenService.generateToken(principal.getName());
     }
 }
+

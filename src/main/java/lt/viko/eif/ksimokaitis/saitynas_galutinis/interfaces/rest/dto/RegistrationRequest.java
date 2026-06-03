@@ -1,4 +1,4 @@
-package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model;
+package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.dto;
 
 public class RegistrationRequest {
 
@@ -48,3 +48,4 @@ public class RegistrationRequest {
         this.accountCurrency = accountCurrency;
     }
 }
+

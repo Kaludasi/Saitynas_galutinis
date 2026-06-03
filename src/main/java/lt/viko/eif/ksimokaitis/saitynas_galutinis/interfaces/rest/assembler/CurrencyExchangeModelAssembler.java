@@ -1,6 +1,6 @@
 package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.assembler;
 
-import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.CurrencyExchangeResponse;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.dto.CurrencyExchangeResponse;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.AccountController;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.CurrencyController;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.PaymentController;

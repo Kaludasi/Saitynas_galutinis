@@ -1,4 +1,4 @@
-package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model;
+package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.dto;
 
 import java.math.BigDecimal;
 
@@ -50,3 +50,4 @@ public class CurrencyExchangeRequest {
         this.toCurrency = toCurrency;
     }
 }
+

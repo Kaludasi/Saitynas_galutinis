@@ -8,8 +8,8 @@ import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.repository.CurrencyExch
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.repository.PaymentRepository;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.infrastructure.persistence.AppUserEntity;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.infrastructure.persistence.AppUserJpaRepository;
-import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.CurrencyExchangeRequest;
-import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.CurrencyExchangeResponse;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.dto.CurrencyExchangeRequest;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.dto.CurrencyExchangeResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;

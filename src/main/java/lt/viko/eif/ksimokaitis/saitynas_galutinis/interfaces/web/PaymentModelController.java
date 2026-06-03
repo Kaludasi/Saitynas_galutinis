@@ -1,4 +1,4 @@
-package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.controller;
+package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.web;
 
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.application.service.AccountService;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.application.service.CurrencyExchangeService;
@@ -42,3 +42,4 @@ public class PaymentModelController {
     }
 
 }
+
