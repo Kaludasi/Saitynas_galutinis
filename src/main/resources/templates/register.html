@@ -16,7 +16,7 @@
                     <h1 class="h3 mb-2">Register</h1>
                     <p class="text-secondary mb-4">Create a new account.</p>
 
-                    <div class="alert alert-danger" th:if="${registrationError}" th:text="${registrationError}"></div>
+                    <div class="alert alert-danger" th:if="${#fields.hasGlobalErrors()}" th:errors="*{global}"></div>
 
                     <form th:action="@{/register}" th:object="${registrationForm}" method="post">
                         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}">
@@ -38,6 +38,17 @@
                         <div class="mb-4">
                             <label class="form-label" for="confirmPassword">Confirm password</label>
                             <input class="form-control" id="confirmPassword" th:field="*{confirmPassword}" type="password" required>
+                        </div>
+
+                        <hr class="my-4">
+                        <h2 class="h5 mb-3">First account</h2>
+
+                        <div class="mb-4">
+                            <label class="form-label" for="accountCurrency">Account currency</label>
+                            <select class="form-select" id="accountCurrency" th:field="*{accountCurrency}" required>
+                                <option value="">Select currency</option>
+                                <option th:each="currency : ${supportedCurrencies}" th:value="${currency}" th:text="${currency}"></option>
+                            </select>
                         </div>
 
                         <button class="btn btn-primary w-100" type="submit">Register</button>

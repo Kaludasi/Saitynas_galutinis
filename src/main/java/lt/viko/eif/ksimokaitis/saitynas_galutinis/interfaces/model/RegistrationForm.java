@@ -6,6 +6,7 @@ public class RegistrationForm {
     private String email;
     private String password;
     private String confirmPassword;
+    private String accountCurrency;
 
     public String getUsername() {
         return username;
@@ -37,5 +38,13 @@ public class RegistrationForm {
 
     public void setConfirmPassword(String confirmPassword) {
         this.confirmPassword = confirmPassword;
+    }
+
+    public String getAccountCurrency() {
+        return accountCurrency;
+    }
+
+    public void setAccountCurrency(String accountCurrency) {
+        this.accountCurrency = accountCurrency;
     }
 }

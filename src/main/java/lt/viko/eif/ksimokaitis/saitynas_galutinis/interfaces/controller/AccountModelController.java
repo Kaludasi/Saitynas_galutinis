@@ -23,4 +23,10 @@ public class AccountModelController {
         model.addAttribute("accounts", accountService.getAccountsForUsername(principal.getName()));
         return "_accounts";
     }
+
+    @GetMapping("/new")
+    public String showOpenAccountPage(Model model) {
+        model.addAttribute("supportedCurrencies", accountService.getSupportedCurrencies());
+        return "account-open";
+    }
 }
