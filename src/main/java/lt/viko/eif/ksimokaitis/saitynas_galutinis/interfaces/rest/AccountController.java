@@ -7,6 +7,7 @@ import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.AccountOpenRe
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.assembler.AccountModelAssembler;
 import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
+import org.springframework.http.CacheControl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.security.Principal;
+import java.time.Duration;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,6 +29,9 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 @RequestMapping("/api/accounts")
 public class AccountController {
 
+    private static final CacheControl PRIVATE_ACCOUNT_CACHE = CacheControl.noStore().cachePrivate();
+    private static final CacheControl PRIVATE_ACCOUNT_CURRENCY_CACHE = CacheControl.maxAge(Duration.ofHours(12)).cachePrivate().mustRevalidate();
+
     private final AccountService accountService;
     private final AccountModelAssembler accountModelAssembler;
 
@@ -36,40 +41,50 @@ public class AccountController {
     }
 
     @GetMapping
-    public CollectionModel<EntityModel<Account>> getAllAccounts(Principal principal) {
+    public ResponseEntity<CollectionModel<EntityModel<Account>>> getAllAccounts(Principal principal) {
         List<EntityModel<Account>> accounts = accountService.getAccountsForUsername(principal.getName())
                 .stream()
                 .map(accountModelAssembler::toModel)
                 .collect(Collectors.toList());
 
-        return CollectionModel.of(
-                accounts,
-                linkTo(methodOn(AccountController.class).getAllAccounts(principal)).withSelfRel()
-        );
+        return ResponseEntity.ok()
+                .cacheControl(PRIVATE_ACCOUNT_CACHE)
+                .varyBy("Authorization")
+                .body(CollectionModel.of(
+                        accounts,
+                        linkTo(methodOn(AccountController.class).getAllAccounts(principal)).withSelfRel()
+                ));
     }
 
     @GetMapping("/{accountId}")
-    public EntityModel<Account> getAccountById(@PathVariable Long accountId, Principal principal) {
+    public ResponseEntity<EntityModel<Account>> getAccountById(@PathVariable Long accountId, Principal principal) {
         Account account = accountService.getAccountForUsernameById(principal.getName(), accountId);
-        return accountModelAssembler.toModel(account);
+        return ResponseEntity.ok()
+                .cacheControl(PRIVATE_ACCOUNT_CACHE)
+                .varyBy("Authorization")
+                .body(accountModelAssembler.toModel(account));
     }
 
     @PostMapping
     public ResponseEntity<EntityModel<Account>> openAccount(@RequestBody AccountOpenRequest request, Principal principal) {
         Account account = accountService.openAccountForUsername(principal.getName(), request.getCurrency());
-        return new ResponseEntity<>(accountModelAssembler.toModel(account), HttpStatus.CREATED);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .cacheControl(CacheControl.noStore())
+                .varyBy("Authorization")
+                .body(accountModelAssembler.toModel(account));
     }
 
     @GetMapping("/currency/{accountNumber}")
     public ResponseEntity<EntityModel<AccountCurrencyResponse>> getAccountCurrency(@PathVariable String accountNumber) {
         String currency = accountService.getCurrencyByAccountNumber(accountNumber);
         AccountCurrencyResponse response = new AccountCurrencyResponse(accountNumber, currency);
-        return ResponseEntity.ok(
-                EntityModel.of(
+        return ResponseEntity.ok()
+                .cacheControl(PRIVATE_ACCOUNT_CURRENCY_CACHE)
+                .varyBy("Authorization")
+                .body(EntityModel.of(
                         response,
                         linkTo(methodOn(AccountController.class).getAccountCurrency(accountNumber)).withSelfRel(),
                         linkTo(methodOn(AccountController.class).getAllAccounts(null)).withRel("accounts")
-                )
-        );
+                ));
     }
 }
