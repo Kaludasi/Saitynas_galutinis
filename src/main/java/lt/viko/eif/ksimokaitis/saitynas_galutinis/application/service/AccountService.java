@@ -34,6 +34,11 @@ public class AccountService {
         return accountRepository.findAllByAppUserIdOrderByCreatedAtDescIdDesc(getUserIdByUsername(username));
     }
 
+    public Account getAccountForUsernameById(String username, Long accountId) {
+        return accountRepository.findByIdAndAppUserId(accountId, getUserIdByUsername(username))
+                .orElseThrow(() -> new IllegalArgumentException("Account not found"));
+    }
+
     public String getCurrencyByAccountNumber(String accountNumber) {
         return accountRepository.findByIban(accountNumber)
                 .orElseThrow()

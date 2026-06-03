@@ -39,7 +39,12 @@ public class PaymentService {
         return paymentRepository.findAllByOrderByCreatedAtDescIdDesc();
     }
 
-    public void transferPayment(PaymentTransferRequest request, Principal principal) {
+    public Payment getPaymentById(Long paymentId) {
+        return paymentRepository.findById(paymentId)
+                .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
+    }
+
+    public Payment transferPayment(PaymentTransferRequest request, Principal principal) {
         Payment payment = createPaymentFromRequest(request);
         paymentRepository.save(payment);
 
@@ -66,7 +71,7 @@ public class PaymentService {
             accountRepository.save(receiverAccount);
         }
         payment.setStatus(PaymentStatus.COMPLETED);
-        paymentRepository.save(payment);
+        return paymentRepository.save(payment);
 
     }
 }
