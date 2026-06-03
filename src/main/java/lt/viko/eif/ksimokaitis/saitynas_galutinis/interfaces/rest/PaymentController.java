@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -26,8 +27,8 @@ public class PaymentController {
     }
 
     @PostMapping("/transfer")
-    public ResponseEntity<PaymentTransferResponse> transferPayment(@RequestBody PaymentTransferRequest request) {
-        paymentService.transferPayment(request);
+    public ResponseEntity<PaymentTransferResponse> transferPayment(@RequestBody PaymentTransferRequest request, Principal principal) {
+        paymentService.transferPayment(request, principal);
         PaymentTransferResponse response = new PaymentTransferResponse("Payment was sent successfully");
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
