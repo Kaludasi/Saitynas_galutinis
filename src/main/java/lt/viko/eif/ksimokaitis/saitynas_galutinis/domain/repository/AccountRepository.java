@@ -19,4 +19,6 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     Optional<Account> findById(Long id);
 
     Optional<Account> findByIdAndAppUserId(Long id, Long appUserId);
+
+    boolean existsByIban(String iban);
 }

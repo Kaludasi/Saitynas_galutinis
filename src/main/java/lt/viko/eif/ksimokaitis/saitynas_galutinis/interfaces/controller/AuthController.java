@@ -2,8 +2,13 @@ package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.controller;
 
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.application.service.RegistrationService;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.RegistrationForm;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.validator.RegistrationFormValidator;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -13,9 +18,19 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 public class AuthController {
 
     private final RegistrationService registrationService;
+    private final RegistrationFormValidator registrationFormValidator;
 
-    public AuthController(RegistrationService registrationService) {
+    public AuthController(
+            RegistrationService registrationService,
+            RegistrationFormValidator registrationFormValidator
+    ) {
         this.registrationService = registrationService;
+        this.registrationFormValidator = registrationFormValidator;
+    }
+
+    @InitBinder("registrationForm")
+    void initRegistrationFormBinder(WebDataBinder binder) {
+        binder.addValidators(registrationFormValidator);
     }
 
     @GetMapping("/login")
@@ -26,40 +41,30 @@ public class AuthController {
     @GetMapping("/register")
     public String showRegistrationPage(Model model) {
         model.addAttribute("registrationForm", new RegistrationForm());
+        model.addAttribute("supportedCurrencies", registrationService.getSupportedCurrencies());
         return "register";
     }
 
     @PostMapping("/register")
-    public String register(@ModelAttribute RegistrationForm registrationForm, Model model, RedirectAttributes redirectAttributes) {
-        if (isBlank(registrationForm.getUsername())
-                || isBlank(registrationForm.getEmail())
-                || isBlank(registrationForm.getPassword())
-                || isBlank(registrationForm.getConfirmPassword())) {
-            model.addAttribute("registrationError", "All fields are required.");
+    public String register(
+            @Validated @ModelAttribute RegistrationForm registrationForm,
+            BindingResult bindingResult,
+            Model model,
+            RedirectAttributes redirectAttributes
+    ) {
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("supportedCurrencies", registrationService.getSupportedCurrencies());
             return "register";
         }
 
-        if (!registrationForm.getPassword().equals(registrationForm.getConfirmPassword())) {
-            model.addAttribute("registrationError", "Passwords do not match.");
-            return "register";
-        }
-
-        try {
-            registrationService.register(
-                    registrationForm.getUsername().trim(),
-                    registrationForm.getEmail().trim(),
-                    registrationForm.getPassword()
-            );
-        } catch (IllegalArgumentException ex) {
-            model.addAttribute("registrationError", ex.getMessage());
-            return "register";
-        }
+        registrationService.register(
+                registrationForm.getUsername().trim(),
+                registrationForm.getEmail().trim(),
+                registrationForm.getPassword(),
+                registrationForm.getAccountCurrency().trim()
+        );
 
         redirectAttributes.addAttribute("registered", "");
         return "redirect:/login";
-    }
-
-    private boolean isBlank(String value) {
-        return value == null || value.isBlank();
     }
 }
