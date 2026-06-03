@@ -1,19 +1,14 @@
 package lt.viko.eif.ksimokaitis.saitynas_galutinis.application.service;
 
 
+import jakarta.transaction.Transactional;
 import lombok.Getter;
-import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.Account;
-import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.CurrencyExchange;
-import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.CurrencyExchangeRequest;
-import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.CurrencyExchangeResponse;
-import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.Payment;
-import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.PaymentStatus;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.*;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.repository.AccountRepository;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.repository.CurrencyExchangeRepository;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.repository.PaymentRepository;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.infrastructure.persistence.AppUserEntity;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.infrastructure.persistence.AppUserJpaRepository;
-import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -54,15 +49,15 @@ public class CurrencyExchangeService {
 
     @Transactional
     public CurrencyExchangeResponse exchange(CurrencyExchangeRequest request, String username) {
-        if (request.amount() == null || request.amount().compareTo(BigDecimal.ZERO) <= 0) {
+        if (request.getAmount() == null || request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Amount must be greater than zero");
         }
 
-        if (request.sourceAccountId() == null || request.targetAccountId() == null) {
+        if (request.getSourceAccountId() == null || request.getTargetAccountId() == null) {
             throw new IllegalArgumentException("Both accounts must be selected");
         }
 
-        if (request.sourceAccountId().equals(request.targetAccountId())) {
+        if (request.getSourceAccountId().equals(request.getTargetAccountId())) {
             throw new IllegalArgumentException("Source and target accounts must be different");
         }
 
@@ -70,16 +65,16 @@ public class CurrencyExchangeService {
                 .map(AppUserEntity::getId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
 
-        Account sourceAccount = accountRepository.findByIdAndAppUserId(request.sourceAccountId(), appUserId)
+        Account sourceAccount = accountRepository.findByIdAndAppUserId(request.getSourceAccountId(), appUserId)
                 .orElseThrow(() -> new IllegalArgumentException("Source account not found"));
-        Account targetAccount = accountRepository.findByIdAndAppUserId(request.targetAccountId(), appUserId)
+        Account targetAccount = accountRepository.findById(request.getTargetAccountId())
                 .orElseThrow(() -> new IllegalArgumentException("Target account not found"));
 
         if (sourceAccount.getCurrency().equals(targetAccount.getCurrency())) {
             throw new IllegalArgumentException("Choose accounts with different currencies");
         }
 
-        if (sourceAccount.getBalance().compareTo(request.amount()) < 0) {
+        if (sourceAccount.getBalance().compareTo(request.getAmount()) < 0) {
             throw new IllegalArgumentException("Insufficient funds in the source account");
         }
 
@@ -96,9 +91,9 @@ public class CurrencyExchangeService {
         }
 
         BigDecimal exchangeRate = apiResponse.data().get(targetAccount.getCurrency()).value();
-        BigDecimal convertedAmount = request.amount().multiply(exchangeRate).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal convertedAmount = request.getAmount().multiply(exchangeRate).setScale(2, RoundingMode.HALF_UP);
 
-        sourceAccount.setBalance(sourceAccount.getBalance().subtract(request.amount()));
+        sourceAccount.setBalance(sourceAccount.getBalance().subtract(request.getAmount()));
         targetAccount.setBalance(targetAccount.getBalance().add(convertedAmount));
 
         accountRepository.save(sourceAccount);
@@ -106,7 +101,7 @@ public class CurrencyExchangeService {
         currencyExchangeRepository.save(new CurrencyExchange(
                 sourceAccount,
                 targetAccount,
-                request.amount(),
+                request.getAmount(),
                 sourceAccount.getCurrency(),
                 convertedAmount,
                 targetAccount.getCurrency(),
@@ -115,7 +110,7 @@ public class CurrencyExchangeService {
         paymentRepository.save(new Payment(
                 sourceAccount.getIban(),
                 targetAccount.getIban(),
-                request.amount(),
+                request.getAmount(),
                 sourceAccount.getCurrency(),
                 PaymentStatus.COMPLETED,
                 "Currency exchange debit to " + targetAccount.getCurrency(),
@@ -136,7 +131,7 @@ public class CurrencyExchangeService {
                 sourceAccount.getIban(),
                 targetAccount.getId(),
                 targetAccount.getIban(),
-                request.amount(),
+                request.getAmount(),
                 sourceAccount.getCurrency(),
                 targetAccount.getCurrency(),
                 exchangeRate,

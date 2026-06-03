@@ -27,15 +27,16 @@ public class AccountService {
         return accountRepository.findAllByAppUserIdOrderByCreatedAtDescIdDesc(getUserIdByUsername(username));
     }
 
-    public Account getAccountById(Long accountId) {
-        return accountRepository.findById(accountId)
-                .orElseThrow(() -> new IllegalArgumentException("Account not found: " + accountId));
+    public String getCurrencyByAccountNumber(String accountNumber) {
+        return accountRepository.findByIban(accountNumber)
+                .orElseThrow()
+                .getCurrency();
     }
 
-    public Account getAccountByIdForUsername(Long accountId, String username) {
-        return accountRepository.findByIdAndAppUserId(accountId, getUserIdByUsername(username))
-                .orElseThrow(() -> new IllegalArgumentException("Account not found: " + accountId));
+    public List<Account> getAccountsByUsername(String username) {
+        return accountRepository.findByOwnerName(username);
     }
+
 
     public Long getUserIdByUsername(String username) {
         AppUserEntity user = appUserJpaRepository.findByUsername(username)
