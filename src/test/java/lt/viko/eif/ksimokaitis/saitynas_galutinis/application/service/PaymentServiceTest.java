@@ -3,7 +3,6 @@ package lt.viko.eif.ksimokaitis.saitynas_galutinis.application.service;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.Account;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.Payment;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.PaymentStatus;
-import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.repository.AccountRepository;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.repository.PaymentRepository;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.dto.PaymentTransferRequest;
 import org.junit.jupiter.api.Test;
@@ -15,12 +14,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.security.Principal;
 import java.time.LocalDateTime;
-import java.util.Optional;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -31,49 +29,48 @@ class PaymentServiceTest {
     private PaymentRepository paymentRepository;
 
     @Mock
-    private AccountRepository accountRepository;
-
-    @Mock
-    private CurrencyExchangeService currencyExchangeService;
-
-    @Mock
     private AccountService accountService;
+
+    @Mock
+    private PaymentTransferService paymentTransferService;
 
     @InjectMocks
     private PaymentService paymentService;
 
     @Test
-    void transferPaymentRejectsSenderAccountOfAnotherUser() {
-        PaymentTransferRequest request = request("LT1", "LT2", "10.00", "EUR");
-        Account senderAccount = account("LT1", "jonas", new BigDecimal("100.00"), "EUR", 99L);
+    void getAllPaymentsForUsernameUsesVisibleAccountIbans() {
+        when(accountService.getAccountsForUsername("jonas")).thenReturn(List.of(
+                account("LT1", "jonas", new BigDecimal("100.00"), "EUR", 10L),
+                account("LT2", "jonas", new BigDecimal("5.00"), "USD", 10L)
+        ));
+        when(paymentRepository.findVisiblePayments(List.of("LT1", "LT2"))).thenReturn(List.of());
 
-        when(accountRepository.findByIban("LT1")).thenReturn(Optional.of(senderAccount));
-        when(accountService.getUserIdByUsername("jonas")).thenReturn(10L);
+        List<Payment> result = paymentService.getAllPaymentsForUsername("jonas");
 
-        assertThatThrownBy(() -> paymentService.transferPayment(request, principal("jonas")))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage("Sender account does not belong to the authorized user");
-
-        verify(paymentRepository, never()).save(any(Payment.class));
+        assertThat(result).isEmpty();
+        verify(paymentRepository).findVisiblePayments(List.of("LT1", "LT2"));
     }
 
     @Test
-    void transferPaymentMovesFundsAndCompletesPaymentForSameCurrency() {
+    void transferPaymentDelegatesToDedicatedTransferService() {
         PaymentTransferRequest request = request("LT1", "LT2", "10.00", "EUR");
-        Account senderAccount = account("LT1", "jonas", new BigDecimal("100.00"), "EUR", 10L);
-        Account receiverAccount = account("LT2", "jonas", new BigDecimal("5.00"), "EUR", 10L);
+        Principal principal = principal("jonas");
+        Payment completedPayment = new Payment(
+                "LT1",
+                "LT2",
+                new BigDecimal("10.00"),
+                "EUR",
+                PaymentStatus.COMPLETED,
+                "Test transfer",
+                LocalDateTime.now()
+        );
 
-        when(accountRepository.findByIban("LT1")).thenReturn(Optional.of(senderAccount));
-        when(accountRepository.findByIban("LT2")).thenReturn(Optional.of(receiverAccount));
-        when(accountService.getUserIdByUsername("jonas")).thenReturn(10L);
-        when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(paymentTransferService.transfer(any(PaymentTransferRequest.class), any())).thenReturn(completedPayment);
 
-        Payment payment = paymentService.transferPayment(request, principal("jonas"));
+        Payment payment = paymentService.transferPayment(request, principal);
 
-        assertThat(senderAccount.getBalance()).isEqualByComparingTo("90.00");
-        assertThat(receiverAccount.getBalance()).isEqualByComparingTo("15.00");
         assertThat(payment.getStatus()).isEqualTo(PaymentStatus.COMPLETED);
-        verify(accountRepository).flush();
+        verify(paymentTransferService).transfer(eq(request), eq(principal));
     }
 
     private static PaymentTransferRequest request(String sender, String receiver, String amount, String currency) {
