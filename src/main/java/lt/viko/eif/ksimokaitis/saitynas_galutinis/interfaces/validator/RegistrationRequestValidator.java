@@ -4,15 +4,28 @@ import lt.viko.eif.ksimokaitis.saitynas_galutinis.infrastructure.persistence.App
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.RegistrationRequest;
 import org.springframework.stereotype.Component;
 
+/**
+ * Validates incoming registration request payloads before user creation is attempted.
+ */
 @Component
 public class RegistrationRequestValidator {
 
     private final AppUserJpaRepository appUserJpaRepository;
 
+    /**
+     * Creates the validator with access to user uniqueness checks.
+     *
+     * @param appUserJpaRepository user persistence gateway
+     */
     public RegistrationRequestValidator(AppUserJpaRepository appUserJpaRepository) {
         this.appUserJpaRepository = appUserJpaRepository;
     }
 
+    /**
+     * Validates required fields, password confirmation, and uniqueness constraints.
+     *
+     * @param request incoming registration payload
+     */
     public void validate(RegistrationRequest request) {
         if (isBlank(request.getUsername())
                 || isBlank(request.getEmail())

@@ -26,6 +26,9 @@ import java.util.stream.Collectors;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
+/**
+ * Exposes currency reference data and exchange history/operations.
+ */
 @RestController
 @RequestMapping("/api/currency")
 @Tag(name = "Currency", description = "Supported currencies and exchange operations")
@@ -37,6 +40,13 @@ public class CurrencyController {
     private final CurrencyExchangeModelAssembler currencyExchangeModelAssembler;
     private final CurrencyExchangeHistoryModelAssembler currencyExchangeHistoryModelAssembler;
 
+    /**
+     * Creates the controller for currency endpoints.
+     *
+     * @param currencyExchangeService currency exchange business service
+     * @param currencyExchangeModelAssembler HATEOAS assembler for exchange responses
+     * @param currencyExchangeHistoryModelAssembler HATEOAS assembler for exchange history responses
+     */
     public CurrencyController(
             CurrencyExchangeService currencyExchangeService,
             CurrencyExchangeModelAssembler currencyExchangeModelAssembler,
@@ -47,7 +57,11 @@ public class CurrencyController {
         this.currencyExchangeHistoryModelAssembler = currencyExchangeHistoryModelAssembler;
     }
 
-
+    /**
+     * Lists supported currency codes for exchange operations.
+     *
+     * @return HATEOAS collection of supported currency resources
+     */
     @GetMapping("/all")
     @Operation(summary = "List supported currencies")
     public ResponseEntity<CollectionModel<EntityModel<CurrencyOptionResponse>>> allCurrencies() {
@@ -67,6 +81,12 @@ public class CurrencyController {
                 ));
     }
 
+    /**
+     * Returns exchange history visible to the authenticated user.
+     *
+     * @param principal authenticated principal
+     * @return HATEOAS collection of exchange history resources
+     */
     @GetMapping("/exchanges")
     @Operation(summary = "List currency exchange history")
     public ResponseEntity<CollectionModel<EntityModel<CurrencyExchangeHistoryResponse>>> getExchangeHistory(Principal principal) {
@@ -84,6 +104,13 @@ public class CurrencyController {
                 ));
     }
 
+    /**
+     * Exchanges money between two accounts owned by the authenticated user.
+     *
+     * @param currencyExchangeRequest exchange request payload
+     * @param principal authenticated principal
+     * @return HATEOAS exchange result resource
+     */
     @PostMapping("/exchange")
     @Operation(summary = "Exchange currency between two user accounts")
     public ResponseEntity<EntityModel<CurrencyExchangeResponse>> exchangeCurrency(

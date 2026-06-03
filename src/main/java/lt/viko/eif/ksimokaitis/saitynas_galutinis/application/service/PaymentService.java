@@ -11,6 +11,9 @@ import java.security.Principal;
 import java.time.LocalDateTime;
 import java.util.List;
 
+/**
+ * Handles payment history access and money transfer execution between accounts.
+ */
 @Service
 public class PaymentService {
 
@@ -19,6 +22,14 @@ public class PaymentService {
     private final CurrencyExchangeService currencyExchangeService;
     private final AccountService accountService;
 
+    /**
+     * Creates the service with repositories and dependent services required for transfers.
+     *
+     * @param paymentRepository payment persistence gateway
+     * @param accountRepository account persistence gateway
+     * @param currencyExchangeService exchange helper used for cross-currency transfers
+     * @param accountService account ownership helper
+     */
     public PaymentService(
             PaymentRepository paymentRepository,
             AccountRepository accountRepository,
@@ -43,15 +54,35 @@ public class PaymentService {
         );
     }
 
+    /**
+     * Returns payments visible to the authenticated user.
+     *
+     * @param username authenticated username
+     * @return ordered list of visible payments
+     */
     public List<Payment> getAllPaymentsForUsername(String username) {
         return paymentRepository.findVisiblePayments(getVisibleIbans(username));
     }
 
+    /**
+     * Returns a single visible payment for the authenticated user.
+     *
+     * @param username authenticated username
+     * @param paymentId payment identifier
+     * @return visible payment
+     */
     public Payment getPaymentByIdForUsername(String username, Long paymentId) {
         return paymentRepository.findVisiblePaymentById(paymentId, getVisibleIbans(username))
                 .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
     }
 
+    /**
+     * Transfers money from one account to another and marks the payment as completed.
+     *
+     * @param request transfer request payload
+     * @param principal authenticated principal
+     * @return completed payment entity
+     */
     public Payment transferPayment(PaymentTransferRequest request, Principal principal) {
         Payment payment = createPaymentFromRequest(request);
 
@@ -85,7 +116,6 @@ public class PaymentService {
         }
         payment.setStatus(PaymentStatus.COMPLETED);
         return paymentRepository.save(payment);
-
     }
 
     private List<String> getVisibleIbans(String username) {

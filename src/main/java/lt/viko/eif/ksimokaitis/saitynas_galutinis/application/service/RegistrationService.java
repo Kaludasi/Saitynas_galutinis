@@ -8,6 +8,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * Registers new application users and ensures an initial account is opened for them.
+ */
 @Service
 public class RegistrationService {
 
@@ -15,6 +18,13 @@ public class RegistrationService {
     private final PasswordEncoder passwordEncoder;
     private final AccountService accountService;
 
+    /**
+     * Creates the service with collaborators needed for user registration.
+     *
+     * @param appUserJpaRepository user persistence gateway
+     * @param passwordEncoder password encoder
+     * @param accountService account opening service
+     */
     public RegistrationService(
             AppUserJpaRepository appUserJpaRepository,
             PasswordEncoder passwordEncoder,
@@ -25,6 +35,14 @@ public class RegistrationService {
         this.accountService = accountService;
     }
 
+    /**
+     * Creates a new enabled user and opens the first account in the selected currency.
+     *
+     * @param username desired username
+     * @param email user email address
+     * @param rawPassword unencrypted password
+     * @param accountCurrency initial account currency
+     */
     @Transactional
     public void register(String username, String email, String rawPassword, String accountCurrency) {
         if (appUserJpaRepository.existsByUsername(username)) {
@@ -46,6 +64,11 @@ public class RegistrationService {
         accountService.openAccountForUserId(savedUser.getId(), savedUser.getUsername(), accountCurrency);
     }
 
+    /**
+     * Returns currencies available during registration.
+     *
+     * @return supported currency codes
+     */
     public List<String> getSupportedCurrencies() {
         return accountService.getSupportedCurrencies();
     }

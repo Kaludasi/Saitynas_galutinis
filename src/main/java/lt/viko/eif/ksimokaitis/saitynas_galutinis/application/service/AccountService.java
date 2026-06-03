@@ -12,6 +12,9 @@ import java.security.SecureRandom;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * Provides account lookup and account opening operations for application users.
+ */
 @Service
 public class AccountService {
 
@@ -21,24 +24,54 @@ public class AccountService {
     private final AccountRepository accountRepository;
     private final AppUserJpaRepository appUserJpaRepository;
 
+    /**
+     * Creates the service with repositories required for account and user lookups.
+     *
+     * @param accountRepository account persistence gateway
+     * @param appUserJpaRepository user persistence gateway
+     */
     public AccountService(AccountRepository accountRepository, AppUserJpaRepository appUserJpaRepository) {
         this.accountRepository = accountRepository;
         this.appUserJpaRepository = appUserJpaRepository;
     }
 
+    /**
+     * Returns every account currently stored in the system ordered by creation time descending.
+     *
+     * @return ordered list of all accounts
+     */
     public List<Account> getAllAccounts() {
         return accountRepository.findAllByOrderByCreatedAtDescIdDesc();
     }
 
+    /**
+     * Returns accounts visible to the authenticated user.
+     *
+     * @param username authenticated username
+     * @return ordered list of accounts owned by the user
+     */
     public List<Account> getAccountsForUsername(String username) {
         return accountRepository.findAllByAppUserIdOrderByCreatedAtDescIdDesc(getUserIdByUsername(username));
     }
 
+    /**
+     * Loads a single account for the authenticated user.
+     *
+     * @param username authenticated username
+     * @param accountId account identifier
+     * @return matching account
+     */
     public Account getAccountForUsernameById(String username, Long accountId) {
         return accountRepository.findByIdAndAppUserId(accountId, getUserIdByUsername(username))
                 .orElseThrow(() -> new IllegalArgumentException("Account not found"));
     }
 
+    /**
+     * Resolves currency by IBAN.
+     *
+     * @param accountNumber IBAN of the account
+     * @return account currency code
+     */
     public String getCurrencyByAccountNumber(String accountNumber) {
         return accountRepository.findByIban(accountNumber)
                 .orElseThrow()
@@ -49,18 +82,38 @@ public class AccountService {
         return accountRepository.findByOwnerName(username);
     }
 
-
+    /**
+     * Resolves internal user identifier by username.
+     *
+     * @param username application username
+     * @return user identifier
+     */
     public Long getUserIdByUsername(String username) {
         AppUserEntity user = appUserJpaRepository.findByUsername(username)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
         return user.getId();
     }
 
+    /**
+     * Opens a new account for the given user.
+     *
+     * @param username authenticated username
+     * @param currency requested account currency
+     * @return persisted account
+     */
     @Transactional
     public Account openAccountForUsername(String username, String currency) {
         return openAccountForUserId(getUserIdByUsername(username), username, currency);
     }
 
+    /**
+     * Opens a new account for a known user identifier.
+     *
+     * @param appUserId owner identifier
+     * @param username owner username used as the account display owner
+     * @param currency requested account currency
+     * @return persisted account
+     */
     @Transactional
     public Account openAccountForUserId(Long appUserId, String username, String currency) {
         String normalizedUsername = username == null ? "" : username.trim();
@@ -86,6 +139,11 @@ public class AccountService {
         return accountRepository.save(account);
     }
 
+    /**
+     * Lists supported account currencies.
+     *
+     * @return sorted currency codes
+     */
     public List<String> getSupportedCurrencies() {
         return SUPPORTED_CURRENCIES.stream().sorted().toList();
     }
