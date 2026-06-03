@@ -2,8 +2,9 @@ package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest;
 
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.application.service.PaymentService;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.Payment;
-import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.PaymentTransferRequest;
-import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.PaymentTransferResponse;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.PaymentResponse;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.PaymentTransferRequest;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.PaymentTransferResponse;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.assembler.PaymentModelAssembler;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.assembler.PaymentTransferModelAssembler;
 import org.springframework.hateoas.CollectionModel;
@@ -41,8 +42,8 @@ public class PaymentController {
     }
 
     @GetMapping
-    public ResponseEntity<CollectionModel<EntityModel<Payment>>> getAllPayments(Principal principal) {
-        List<EntityModel<Payment>> payments = paymentService.getAllPaymentsForUsername(principal.getName())
+    public ResponseEntity<CollectionModel<EntityModel<PaymentResponse>>> getAllPayments(Principal principal) {
+        List<EntityModel<PaymentResponse>> payments = paymentService.getAllPaymentsForUsername(principal.getName())
                 .stream()
                 .map(paymentModelAssembler::toModel)
                 .collect(Collectors.toList());
@@ -57,7 +58,7 @@ public class PaymentController {
     }
 
     @GetMapping("/{paymentId}")
-    public ResponseEntity<EntityModel<Payment>> getPaymentById(@PathVariable Long paymentId, Principal principal) {
+    public ResponseEntity<EntityModel<PaymentResponse>> getPaymentById(@PathVariable Long paymentId, Principal principal) {
         return ResponseEntity.ok()
                 .cacheControl(PRIVATE_PAYMENT_CACHE)
                 .varyBy("Authorization")

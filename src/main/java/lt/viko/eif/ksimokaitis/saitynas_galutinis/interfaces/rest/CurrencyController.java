@@ -3,8 +3,8 @@ package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest;
 
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.application.service.CurrencyExchangeService;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.CurrencyExchange;
-import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.CurrencyExchangeRequest;
-import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.CurrencyExchangeResponse;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.CurrencyExchangeRequest;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.CurrencyExchangeResponse;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.CurrencyExchangeHistoryResponse;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.CurrencyOptionResponse;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.assembler.CurrencyExchangeHistoryModelAssembler;

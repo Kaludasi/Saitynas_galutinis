@@ -1,6 +1,6 @@
 package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.assembler;
 
-import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.PaymentTransferResponse;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.PaymentTransferResponse;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.PaymentController;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.stereotype.Component;
@@ -15,8 +15,8 @@ public class PaymentTransferModelAssembler {
         EntityModel<PaymentTransferResponse> model = EntityModel.of(response,
                 linkTo(methodOn(PaymentController.class).getAllPayments(null)).withRel("payments"));
 
-        if (response.getPaymentId() != null) {
-            model.add(linkTo(methodOn(PaymentController.class).getPaymentById(response.getPaymentId(), null)).withRel("payment"));
+        if (response.paymentId() != null) {
+            model.add(linkTo(methodOn(PaymentController.class).getPaymentById(response.paymentId(), null)).withRel("payment"));
         }
 
         return model;
