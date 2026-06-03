@@ -1,80 +1,72 @@
 package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest;
 
-import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.Payment;
+import com.fasterxml.jackson.databind.JsonNode;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.PaymentStatus;
-import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.repository.PaymentRepository;
-import org.junit.jupiter.api.BeforeEach;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.infrastructure.persistence.AppUserEntity;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MvcResult;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 
-import static org.hamcrest.Matchers.hasSize;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
-@AutoConfigureMockMvc
-class PaymentControllerIntegrationTest {
+class PaymentControllerIntegrationTest extends ApiIntegrationTestSupport {
 
-    @Autowired
-    private MockMvc mockMvc;
+    @Test
+    void paymentHistoryReturnsOnlyVisiblePayments() throws Exception {
+        AppUserEntity visibleUser = createUser("payer.user", "payer.user@example.com", "Payer#2026");
+        AppUserEntity hiddenUser = createUser("hidden.payer", "hidden.payer@example.com", "Hidden#2026");
 
-    @Autowired
-    private PaymentRepository paymentRepository;
+        var visibleAccount = createAccount("LT555555555555555555", "payer.user", "EUR", new BigDecimal("200.00"), visibleUser.getId());
+        var visibleReceiver = createAccount("LT666666666666666666", "payer.user", "USD", new BigDecimal("0.00"), visibleUser.getId());
+        var hiddenAccount = createAccount("LT777777777777777777", "hidden.payer", "EUR", new BigDecimal("90.00"), hiddenUser.getId());
+        var hiddenReceiver = createAccount("LT888888888888888888", "hidden.payer", "GBP", new BigDecimal("50.00"), hiddenUser.getId());
 
-    @BeforeEach
-    void setUp() {
-        paymentRepository.deleteAll();
+        createPayment(visibleAccount.getIban(), visibleReceiver.getIban(), new BigDecimal("20.00"), "EUR", PaymentStatus.COMPLETED, "Visible payment");
+        createPayment(hiddenAccount.getIban(), hiddenReceiver.getIban(), new BigDecimal("30.00"), "EUR", PaymentStatus.COMPLETED, "Hidden payment");
+
+        String token = issueToken("payer.user", "Payer#2026");
+
+        MvcResult result = mockMvc.perform(get("/api/payments")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(token)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        JsonNode root = objectMapper.readTree(result.getResponse().getContentAsString());
+        JsonNode payments = firstEmbeddedArray(root);
+
+        assertThat(payments).hasSize(1);
+        assertThat(payments.get(0).get("description").asText()).isEqualTo("Visible payment");
     }
 
     @Test
-    void getAllPaymentsReturnsPaymentsOrderedByNewestFirst() throws Exception {
-        paymentRepository.save(new Payment(
-                "LT111111111111111111",
-                "LT222222222222222222",
-                new BigDecimal("25.50"),
-                "EUR",
-                PaymentStatus.COMPLETED,
-                "First payment",
-                LocalDateTime.of(2026, 5, 10, 10, 0)
-        ));
-        paymentRepository.save(new Payment(
-                "LT333333333333333333",
-                "LT444444444444444444",
-                new BigDecimal("99.99"),
-                "USD",
-                PaymentStatus.PENDING,
-                "Second payment",
-                LocalDateTime.of(2026, 5, 10, 11, 0)
-        ));
+    void transferPaymentCreatesCompletedPaymentForAuthorizedUser() throws Exception {
+        AppUserEntity user = createUser("transfer.user", "transfer.user@example.com", "Transfer#2026");
+        var sender = createAccount("LT999999999999999999", "transfer.user", "EUR", new BigDecimal("250.00"), user.getId());
+        var receiver = createAccount("LT101010101010101010", "transfer.user", "EUR", BigDecimal.ZERO, user.getId());
 
-        mockMvc.perform(get("/api/payments"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].senderAccount").value("LT333333333333333333"))
-                .andExpect(jsonPath("$[0].receiverAccount").value("LT444444444444444444"))
-                .andExpect(jsonPath("$[0].amount").value(99.99))
-                .andExpect(jsonPath("$[0].currency").value("USD"))
-                .andExpect(jsonPath("$[0].status").value("PENDING"))
-                .andExpect(jsonPath("$[0].description").value("Second payment"))
-                .andExpect(jsonPath("$[1].senderAccount").value("LT111111111111111111"))
-                .andExpect(jsonPath("$[1].receiverAccount").value("LT222222222222222222"))
-                .andExpect(jsonPath("$[1].amount").value(25.50))
-                .andExpect(jsonPath("$[1].currency").value("EUR"))
-                .andExpect(jsonPath("$[1].status").value("COMPLETED"))
-                .andExpect(jsonPath("$[1].description").value("First payment"));
-    }
+        String token = issueToken("transfer.user", "Transfer#2026");
 
-    @Test
-    void getAllPaymentsReturnsEmptyListWhenNoPaymentsExist() throws Exception {
-        mockMvc.perform(get("/api/payments"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(0)));
+        mockMvc.perform(post("/api/payments/transfer")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "senderAccount": "LT999999999999999999",
+                                  "receiverAccount": "LT101010101010101010",
+                                  "amount": 15.00,
+                                  "currency": "EUR",
+                                  "description": "Acceptance transfer"
+                                }
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.message").value("Payment was sent successfully"))
+                .andExpect(jsonPath("$.paymentId").isNumber());
     }
 }
