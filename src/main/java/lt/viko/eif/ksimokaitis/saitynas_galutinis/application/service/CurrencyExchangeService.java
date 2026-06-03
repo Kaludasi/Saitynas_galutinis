@@ -53,10 +53,6 @@ public class CurrencyExchangeService {
             throw new IllegalArgumentException("Amount must be greater than zero");
         }
 
-        if (request.getSourceAccountId() == null || request.getTargetAccountId() == null) {
-            throw new IllegalArgumentException("Both accounts must be selected");
-        }
-
         if (request.getSourceAccountId().equals(request.getTargetAccountId())) {
             throw new IllegalArgumentException("Source and target accounts must be different");
         }
