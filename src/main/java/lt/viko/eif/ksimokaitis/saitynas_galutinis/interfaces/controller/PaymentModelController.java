@@ -31,7 +31,7 @@ public class PaymentModelController {
     @GetMapping
     public String showPayments(Model model, Principal principal) {
         model.addAttribute("payments", paymentService.getAllPaymentsForUsername(principal.getName()));
-        model.addAttribute("exchangeHistory", currencyExchangeService.getExchangeHistoryForUsername(principal.getName()));
+        model.addAttribute("exchangeHistory", currencyExchangeService.getExchangeHistoryResponsesForUsername(principal.getName()));
         return "_payments";
     }
 

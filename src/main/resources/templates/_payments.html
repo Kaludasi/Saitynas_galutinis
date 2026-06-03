@@ -82,8 +82,8 @@
                     </tr>
                     <tr th:each="exchange : ${exchangeHistory}">
                         <td th:text="${exchange.id}"></td>
-                        <td th:text="${exchange.sourceAccount.iban}"></td>
-                        <td th:text="${exchange.targetAccount.iban}"></td>
+                        <td th:text="${exchange.sourceAccountIban}"></td>
+                        <td th:text="${exchange.targetAccountIban}"></td>
                         <td class="fw-semibold" th:text="${exchange.sourceAmount + ' ' + exchange.sourceCurrency}"></td>
                         <td class="fw-semibold" th:text="${exchange.targetAmount + ' ' + exchange.targetCurrency}"></td>
                         <td th:text="${exchange.exchangeRate}"></td>

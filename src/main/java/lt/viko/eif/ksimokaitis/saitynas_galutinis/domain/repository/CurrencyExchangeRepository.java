@@ -12,6 +12,8 @@ public interface CurrencyExchangeRepository extends JpaRepository<CurrencyExchan
     @Query("""
             select ce
             from CurrencyExchange ce
+            join fetch ce.sourceAccount sa
+            join fetch ce.targetAccount ta
             where ce.sourceAccount.appUserId = :appUserId or ce.targetAccount.appUserId = :appUserId
             order by ce.createdAt desc, ce.id desc
             """)
