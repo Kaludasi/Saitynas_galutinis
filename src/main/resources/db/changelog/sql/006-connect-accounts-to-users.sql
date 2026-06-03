@@ -4,6 +4,14 @@
 ALTER TABLE account
     ADD COLUMN IF NOT EXISTS app_user_id BIGINT;
 
+UPDATE account
+SET app_user_id = (
+    SELECT id
+    FROM app_user
+    WHERE username = 'admin'
+)
+WHERE app_user_id IS NULL;
+
 ALTER TABLE account
     ALTER COLUMN app_user_id SET NOT NULL;
 
