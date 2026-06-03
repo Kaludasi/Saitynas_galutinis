@@ -7,4 +7,5 @@ import lombok.Data;
 @Data
 public class PaymentTransferResponse {
     private String message;
+    private Long paymentId;
 }
