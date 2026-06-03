@@ -53,6 +53,47 @@
             </div>
         </div>
     </div>
+
+    <div class="card shadow-sm mt-4">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-start gap-3 mb-4">
+                <div>
+                    <h2 class="h3 mb-2">Exchange history</h2>
+                    <p class="text-secondary mb-0">Recent currency exchanges for your accounts.</p>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle mb-0">
+                    <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>From Account</th>
+                        <th>To Account</th>
+                        <th>Sold</th>
+                        <th>Bought</th>
+                        <th>Rate</th>
+                        <th>Created At</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:if="${#lists.isEmpty(exchangeHistory)}">
+                        <td colspan="7" class="text-center text-muted py-4">No currency exchanges available yet.</td>
+                    </tr>
+                    <tr th:each="exchange : ${exchangeHistory}">
+                        <td th:text="${exchange.id}"></td>
+                        <td th:text="${exchange.sourceAccount.iban}"></td>
+                        <td th:text="${exchange.targetAccount.iban}"></td>
+                        <td class="fw-semibold" th:text="${exchange.sourceAmount + ' ' + exchange.sourceCurrency}"></td>
+                        <td class="fw-semibold" th:text="${exchange.targetAmount + ' ' + exchange.targetCurrency}"></td>
+                        <td th:text="${exchange.exchangeRate}"></td>
+                        <td th:text="${exchange.createdAt}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>

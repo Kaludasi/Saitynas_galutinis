@@ -13,10 +13,10 @@ public class PaymentTransferModelAssembler {
 
     public EntityModel<PaymentTransferResponse> toModel(PaymentTransferResponse response) {
         EntityModel<PaymentTransferResponse> model = EntityModel.of(response,
-                linkTo(methodOn(PaymentController.class).getAllPayments()).withRel("payments"));
+                linkTo(methodOn(PaymentController.class).getAllPayments(null)).withRel("payments"));
 
         if (response.getPaymentId() != null) {
-            model.add(linkTo(methodOn(PaymentController.class).getPaymentById(response.getPaymentId())).withRel("payment"));
+            model.add(linkTo(methodOn(PaymentController.class).getPaymentById(response.getPaymentId(), null)).withRel("payment"));
         }
 
         return model;

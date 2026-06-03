@@ -41,8 +41,8 @@ public class PaymentController {
     }
 
     @GetMapping
-    public ResponseEntity<CollectionModel<EntityModel<Payment>>> getAllPayments() {
-        List<EntityModel<Payment>> payments = paymentService.getAllPayments()
+    public ResponseEntity<CollectionModel<EntityModel<Payment>>> getAllPayments(Principal principal) {
+        List<EntityModel<Payment>> payments = paymentService.getAllPaymentsForUsername(principal.getName())
                 .stream()
                 .map(paymentModelAssembler::toModel)
                 .collect(Collectors.toList());
@@ -52,16 +52,16 @@ public class PaymentController {
                 .varyBy("Authorization")
                 .body(CollectionModel.of(
                         payments,
-                        linkTo(methodOn(PaymentController.class).getAllPayments()).withSelfRel()
+                        linkTo(methodOn(PaymentController.class).getAllPayments(principal)).withSelfRel()
                 ));
     }
 
     @GetMapping("/{paymentId}")
-    public ResponseEntity<EntityModel<Payment>> getPaymentById(@PathVariable Long paymentId) {
+    public ResponseEntity<EntityModel<Payment>> getPaymentById(@PathVariable Long paymentId, Principal principal) {
         return ResponseEntity.ok()
                 .cacheControl(PRIVATE_PAYMENT_CACHE)
                 .varyBy("Authorization")
-                .body(paymentModelAssembler.toModel(paymentService.getPaymentById(paymentId)));
+                .body(paymentModelAssembler.toModel(paymentService.getPaymentByIdForUsername(principal.getName(), paymentId)));
     }
 
     @PostMapping("/transfer")

@@ -16,11 +16,18 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final AccountRepository accountRepository;
     private final CurrencyExchangeService currencyExchangeService;
+    private final AccountService accountService;
 
-    public PaymentService(PaymentRepository paymentRepository, AccountRepository accountRepository, CurrencyExchangeService currencyExchangeService) {
+    public PaymentService(
+            PaymentRepository paymentRepository,
+            AccountRepository accountRepository,
+            CurrencyExchangeService currencyExchangeService,
+            AccountService accountService
+    ) {
         this.paymentRepository = paymentRepository;
         this.accountRepository = accountRepository;
         this.currencyExchangeService = currencyExchangeService;
+        this.accountService = accountService;
     }
 
     private static Payment createPaymentFromRequest(PaymentTransferRequest request) {
@@ -35,21 +42,26 @@ public class PaymentService {
         );
     }
 
-    public List<Payment> getAllPayments() {
-        return paymentRepository.findAllByOrderByCreatedAtDescIdDesc();
+    public List<Payment> getAllPaymentsForUsername(String username) {
+        return paymentRepository.findVisiblePayments(getVisibleIbans(username));
     }
 
-    public Payment getPaymentById(Long paymentId) {
-        return paymentRepository.findById(paymentId)
+    public Payment getPaymentByIdForUsername(String username, Long paymentId) {
+        return paymentRepository.findVisiblePaymentById(paymentId, getVisibleIbans(username))
                 .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
     }
 
     public Payment transferPayment(PaymentTransferRequest request, Principal principal) {
         Payment payment = createPaymentFromRequest(request);
-        paymentRepository.save(payment);
 
         Account senderAccount = accountRepository.findByIban(payment.getSenderAccount())
                 .orElseThrow(() -> new IllegalArgumentException("Sender account not found"));
+        Long currentUserId = accountService.getUserIdByUsername(principal.getName());
+        if (!senderAccount.getAppUserId().equals(currentUserId)) {
+            throw new IllegalArgumentException("Sender account does not belong to the authorized user");
+        }
+
+        paymentRepository.save(payment);
         if (senderAccount.getBalance().compareTo(request.getAmount()) < 0) {
             throw new IllegalArgumentException("Sender account balance less than or equal to sent amount");
         }
@@ -73,5 +85,12 @@ public class PaymentService {
         payment.setStatus(PaymentStatus.COMPLETED);
         return paymentRepository.save(payment);
 
+    }
+
+    private List<String> getVisibleIbans(String username) {
+        return accountService.getAccountsForUsername(username)
+                .stream()
+                .map(Account::getIban)
+                .toList();
     }
 }

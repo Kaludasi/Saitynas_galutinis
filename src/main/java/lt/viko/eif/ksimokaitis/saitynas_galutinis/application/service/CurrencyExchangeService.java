@@ -83,6 +83,10 @@ public class CurrencyExchangeService {
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
     }
 
+    public List<CurrencyExchange> getExchangeHistoryForUsername(String username) {
+        return currencyExchangeRepository.findAllVisibleByAppUserId(resolveUserId(username));
+    }
+
     private ExchangeAccounts loadExchangeAccounts(CurrencyExchangeRequest request, Long appUserId) {
         Account sourceAccount = accountRepository.findByIdAndAppUserId(request.getSourceAccountId(), appUserId)
                 .orElseThrow(() -> new IllegalArgumentException("Source account not found"));

@@ -19,7 +19,7 @@ public class AccountModelAssembler implements RepresentationModelAssembler<Accou
         return EntityModel.of(account,
                 linkTo(methodOn(AccountController.class).getAccountById(account.getId(), null)).withSelfRel(),
                 linkTo(methodOn(AccountController.class).getAllAccounts(null)).withRel("accounts"),
-                linkTo(methodOn(PaymentController.class).getAllPayments()).withRel("payments"),
+                linkTo(methodOn(PaymentController.class).getAllPayments(null)).withRel("payments"),
                 linkTo(methodOn(CurrencyController.class).allCurrencies()).withRel("currencies"),
                 linkTo(methodOn(AccountController.class).getAccountCurrency(account.getIban())).withRel("currency"));
     }
