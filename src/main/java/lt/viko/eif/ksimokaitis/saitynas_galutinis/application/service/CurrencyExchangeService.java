@@ -22,7 +22,7 @@ import java.util.Map;
 @Service
 public class CurrencyExchangeService {
 
-    private final String URL = "https://api.currencyapi.com/v3/latest";
+    private static final String LATEST_RATES_URL = "https://api.currencyapi.com/v3/latest";
 
     @Getter
     private final List<String> currencies = List.of("EUR", "USD", "GBP", "PLN");
@@ -49,55 +49,138 @@ public class CurrencyExchangeService {
 
     @Transactional
     public CurrencyExchangeResponse exchange(CurrencyExchangeRequest request, String username) {
+        validateExchangeRequest(request);
+
+        Long appUserId = resolveUserId(username);
+        ExchangeAccounts exchangeAccounts = loadExchangeAccounts(request, appUserId);
+        ExchangeOutcome exchangeOutcome = performExchange(exchangeAccounts, request.getAmount());
+
+        return buildExchangeResponse(
+                exchangeAccounts,
+                request.getAmount(),
+                exchangeOutcome.exchangeRate(),
+                exchangeOutcome.convertedAmount()
+        );
+    }
+
+    private void validateExchangeRequest(CurrencyExchangeRequest request) {
         if (request.getAmount() == null || request.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Amount must be greater than zero");
+        }
+
+        if (request.getSourceAccountId() == null || request.getTargetAccountId() == null) {
+            throw new IllegalArgumentException("Both accounts must be selected");
         }
 
         if (request.getSourceAccountId().equals(request.getTargetAccountId())) {
             throw new IllegalArgumentException("Source and target accounts must be different");
         }
+    }
 
-        Long appUserId = appUserJpaRepository.findByUsername(username)
+    private Long resolveUserId(String username) {
+        return appUserJpaRepository.findByUsername(username)
                 .map(AppUserEntity::getId)
                 .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
+    }
 
+    private ExchangeAccounts loadExchangeAccounts(CurrencyExchangeRequest request, Long appUserId) {
         Account sourceAccount = accountRepository.findByIdAndAppUserId(request.getSourceAccountId(), appUserId)
                 .orElseThrow(() -> new IllegalArgumentException("Source account not found"));
-        Account targetAccount = accountRepository.findById(request.getTargetAccountId())
+        Account targetAccount = accountRepository.findByIdAndAppUserId(request.getTargetAccountId(), appUserId)
                 .orElseThrow(() -> new IllegalArgumentException("Target account not found"));
 
-        if (sourceAccount.getCurrency().equals(targetAccount.getCurrency())) {
+        return new ExchangeAccounts(sourceAccount, targetAccount);
+    }
+
+    protected ExchangeOutcome performExchange(ExchangeAccounts exchangeAccounts, BigDecimal sourceAmount) {
+        validateExchangeAccounts(exchangeAccounts, sourceAmount);
+
+        BigDecimal exchangeRate = fetchExchangeRate(
+                exchangeAccounts.sourceAccount().getCurrency(),
+                exchangeAccounts.targetAccount().getCurrency()
+        );
+        BigDecimal convertedAmount = calculateConvertedAmount(sourceAmount, exchangeRate);
+
+        applyBalanceChanges(exchangeAccounts, sourceAmount, convertedAmount);
+        saveExchangeOutcome(exchangeAccounts, sourceAmount, exchangeRate, convertedAmount);
+
+        return new ExchangeOutcome(exchangeRate, convertedAmount);
+    }
+
+    private void validateExchangeAccounts(ExchangeAccounts exchangeAccounts, BigDecimal amount) {
+        validateDifferentCurrencies(exchangeAccounts);
+        validateSufficientFunds(exchangeAccounts.sourceAccount(), amount);
+    }
+
+    private void validateDifferentCurrencies(ExchangeAccounts exchangeAccounts) {
+        if (exchangeAccounts.sourceAccount().getCurrency().equals(exchangeAccounts.targetAccount().getCurrency())) {
             throw new IllegalArgumentException("Choose accounts with different currencies");
         }
+    }
 
-        if (sourceAccount.getBalance().compareTo(request.getAmount()) < 0) {
+    private void validateSufficientFunds(Account sourceAccount, BigDecimal amount) {
+        if (sourceAccount.getBalance().compareTo(amount) < 0) {
             throw new IllegalArgumentException("Insufficient funds in the source account");
         }
+    }
 
+    protected BigDecimal fetchExchangeRate(String sourceCurrency, String targetCurrency) {
         String apiUrl = UriComponentsBuilder
-                .fromUriString(URL)
+                .fromUriString(LATEST_RATES_URL)
                 .queryParam("apikey", currencyApiKey)
-                .queryParam("base_currency", sourceAccount.getCurrency())
-                .queryParam("currencies", targetAccount.getCurrency())
+                .queryParam("base_currency", sourceCurrency)
+                .queryParam("currencies", targetCurrency)
                 .toUriString();
 
         CurrencyApiResponse apiResponse = restTemplate.getForObject(apiUrl, CurrencyApiResponse.class);
-        if (apiResponse == null || apiResponse.data() == null || apiResponse.data().get(targetAccount.getCurrency()) == null) {
+        if (apiResponse == null || apiResponse.data() == null || apiResponse.data().get(targetCurrency) == null) {
             throw new IllegalStateException("Exchange rate is unavailable");
         }
 
-        BigDecimal exchangeRate = apiResponse.data().get(targetAccount.getCurrency()).value();
-        BigDecimal convertedAmount = request.getAmount().multiply(exchangeRate).setScale(2, RoundingMode.HALF_UP);
+        return apiResponse.data().get(targetCurrency).value();
+    }
 
-        sourceAccount.setBalance(sourceAccount.getBalance().subtract(request.getAmount()));
-        targetAccount.setBalance(targetAccount.getBalance().add(convertedAmount));
+    protected BigDecimal calculateConvertedAmount(BigDecimal amount, BigDecimal exchangeRate) {
+        return amount.multiply(exchangeRate).setScale(2, RoundingMode.HALF_UP);
+    }
 
-        accountRepository.save(sourceAccount);
-        accountRepository.save(targetAccount);
+    protected void applyBalanceChanges(ExchangeAccounts exchangeAccounts, BigDecimal sourceAmount, BigDecimal targetAmount) {
+        exchangeAccounts.sourceAccount().setBalance(exchangeAccounts.sourceAccount().getBalance().subtract(sourceAmount));
+        exchangeAccounts.targetAccount().setBalance(exchangeAccounts.targetAccount().getBalance().add(targetAmount));
+    }
+
+    protected CurrencyExchangeResponse buildExchangeResponse(
+            ExchangeAccounts exchangeAccounts,
+            BigDecimal sourceAmount,
+            BigDecimal exchangeRate,
+            BigDecimal convertedAmount
+    ) {
+        return new CurrencyExchangeResponse(
+                exchangeAccounts.sourceAccount().getId(),
+                exchangeAccounts.sourceAccount().getIban(),
+                exchangeAccounts.targetAccount().getId(),
+                exchangeAccounts.targetAccount().getIban(),
+                sourceAmount,
+                exchangeAccounts.sourceAccount().getCurrency(),
+                exchangeAccounts.targetAccount().getCurrency(),
+                exchangeRate,
+                convertedAmount,
+                exchangeAccounts.sourceAccount().getBalance(),
+                exchangeAccounts.targetAccount().getBalance()
+        );
+    }
+
+    protected void recordExchangeAudit(
+            Account sourceAccount,
+            Account targetAccount,
+            BigDecimal sourceAmount,
+            BigDecimal exchangeRate,
+            BigDecimal convertedAmount
+    ) {
         currencyExchangeRepository.save(new CurrencyExchange(
                 sourceAccount,
                 targetAccount,
-                request.getAmount(),
+                sourceAmount,
                 sourceAccount.getCurrency(),
                 convertedAmount,
                 targetAccount.getCurrency(),
@@ -106,7 +189,7 @@ public class CurrencyExchangeService {
         paymentRepository.save(new Payment(
                 sourceAccount.getIban(),
                 targetAccount.getIban(),
-                request.getAmount(),
+                sourceAmount,
                 sourceAccount.getCurrency(),
                 PaymentStatus.COMPLETED,
                 "Currency exchange debit to " + targetAccount.getCurrency(),
@@ -121,20 +204,33 @@ public class CurrencyExchangeService {
                 "Currency exchange credit from " + sourceAccount.getCurrency(),
                 null
         ));
+    }
 
-        return new CurrencyExchangeResponse(
-                sourceAccount.getId(),
-                sourceAccount.getIban(),
-                targetAccount.getId(),
-                targetAccount.getIban(),
-                request.getAmount(),
-                sourceAccount.getCurrency(),
-                targetAccount.getCurrency(),
+    protected void persistExchange(Account sourceAccount, Account targetAccount) {
+        accountRepository.save(sourceAccount);
+        accountRepository.save(targetAccount);
+    }
+
+    protected void saveExchangeOutcome(
+            ExchangeAccounts exchangeAccounts,
+            BigDecimal sourceAmount,
+            BigDecimal exchangeRate,
+            BigDecimal convertedAmount
+    ) {
+        persistExchange(exchangeAccounts.sourceAccount(), exchangeAccounts.targetAccount());
+        recordExchangeAudit(
+                exchangeAccounts.sourceAccount(),
+                exchangeAccounts.targetAccount(),
+                sourceAmount,
                 exchangeRate,
-                convertedAmount,
-                sourceAccount.getBalance(),
-                targetAccount.getBalance()
+                convertedAmount
         );
+    }
+
+    protected record ExchangeAccounts(Account sourceAccount, Account targetAccount) {
+    }
+
+    protected record ExchangeOutcome(BigDecimal exchangeRate, BigDecimal convertedAmount) {
     }
 
     public record CurrencyApiResponse(
