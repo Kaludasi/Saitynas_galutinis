@@ -9,6 +9,7 @@ import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.repository.CurrencyExch
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.repository.PaymentRepository;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.infrastructure.persistence.AppUserEntity;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.infrastructure.persistence.AppUserJpaRepository;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.CurrencyExchangeHistoryResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -85,6 +86,12 @@ public class CurrencyExchangeService {
 
     public List<CurrencyExchange> getExchangeHistoryForUsername(String username) {
         return currencyExchangeRepository.findAllVisibleByAppUserId(resolveUserId(username));
+    }
+
+    public List<CurrencyExchangeHistoryResponse> getExchangeHistoryResponsesForUsername(String username) {
+        return getExchangeHistoryForUsername(username).stream()
+                .map(this::toHistoryResponse)
+                .toList();
     }
 
     private ExchangeAccounts loadExchangeAccounts(CurrencyExchangeRequest request, Long appUserId) {
@@ -235,6 +242,22 @@ public class CurrencyExchangeService {
     }
 
     protected record ExchangeOutcome(BigDecimal exchangeRate, BigDecimal convertedAmount) {
+    }
+
+    private CurrencyExchangeHistoryResponse toHistoryResponse(CurrencyExchange currencyExchange) {
+        return new CurrencyExchangeHistoryResponse(
+                currencyExchange.getId(),
+                currencyExchange.getSourceAccount().getId(),
+                currencyExchange.getSourceAccount().getIban(),
+                currencyExchange.getTargetAccount().getId(),
+                currencyExchange.getTargetAccount().getIban(),
+                currencyExchange.getSourceAmount(),
+                currencyExchange.getSourceCurrency(),
+                currencyExchange.getTargetAmount(),
+                currencyExchange.getTargetCurrency(),
+                currencyExchange.getExchangeRate(),
+                currencyExchange.getCreatedAt()
+        );
     }
 
     public record CurrencyApiResponse(
