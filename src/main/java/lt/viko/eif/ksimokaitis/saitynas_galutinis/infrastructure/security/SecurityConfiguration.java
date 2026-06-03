@@ -2,21 +2,42 @@ package lt.viko.eif.ksimokaitis.saitynas_galutinis.infrastructure.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.Customizer;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 public class SecurityConfiguration {
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    @Order(1)
+    SecurityFilterChain apiSecurityFilterChain(
+            HttpSecurity http,
+            ApiBearerAuthenticationFilter apiBearerAuthenticationFilter
+    ) throws Exception {
+        http
+                .securityMatcher("/api/**")
+                .csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(authorize -> authorize
+                        .requestMatchers("/api/auth/register", "/api/auth/token").permitAll()
+                        .anyRequest().hasRole("USER")
+                )
+                .addFilterBefore(apiBearerAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
+
+    @Bean
+    @Order(2)
+    SecurityFilterChain webSecurityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/login", "/register", "/api/auth/register", "/css/**", "/webjars/**").permitAll()
-                        .requestMatchers("/api/**").hasRole("USER")
+                        .requestMatchers("/login", "/register", "/css/**", "/webjars/**").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form
@@ -27,8 +48,7 @@ public class SecurityConfiguration {
                 .logout(logout -> logout
                         .logoutSuccessUrl("/login?logout")
                         .permitAll()
-                )
-                .httpBasic(Customizer.withDefaults());
+                );
 
         return http.build();
     }

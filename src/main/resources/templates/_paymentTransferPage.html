@@ -4,8 +4,7 @@
     <meta charset="UTF-8">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <title th:text="${pageTitle}">Payment transferring</title>
-    <meta name="_csrf" th:content="${_csrf.token}">
-    <meta name="_csrf_header" th:content="${_csrf.headerName}">
+    <meta name="api_token" th:content="${apiToken}">
 </head>
 <body>
 <div th:replace="_header :: _header"></div>
@@ -78,8 +77,7 @@
             currency: $("#currency").val(),
             description: $("#description").val()
         };
-        const csrfToken = $("meta[name='_csrf']").attr("content");
-        const csrfHeader = $("meta[name='_csrf_header']").attr("content");
+        const apiToken = $("meta[name='api_token']").attr("content");
 
         $.ajax({
             url: "/api/payments/transfer",
@@ -87,7 +85,7 @@
             contentType: "application/json",
             data: JSON.stringify(paymentRequest),
             beforeSend: function (xhr) {
-                xhr.setRequestHeader(csrfHeader, csrfToken);
+                xhr.setRequestHeader("Authorization", "Bearer " + apiToken);
             },
             success: function () {
                 $("#successMessage").show();
