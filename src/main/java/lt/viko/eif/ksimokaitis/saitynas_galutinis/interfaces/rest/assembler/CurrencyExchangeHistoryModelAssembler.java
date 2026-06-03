@@ -1,7 +1,7 @@
 package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.assembler;
 
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.CurrencyExchange;
-import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.CurrencyExchangeHistoryResponse;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.dto.CurrencyExchangeHistoryResponse;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.AccountController;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.CurrencyController;
 import org.springframework.hateoas.EntityModel;

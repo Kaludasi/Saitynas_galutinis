@@ -1,6 +1,6 @@
 package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.assembler;
 
-import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.PaymentTransferResponse;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.dto.PaymentTransferResponse;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.PaymentController;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.stereotype.Component;

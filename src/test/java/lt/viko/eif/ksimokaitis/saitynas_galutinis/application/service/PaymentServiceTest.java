@@ -5,7 +5,7 @@ import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.Payment;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.PaymentStatus;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.repository.AccountRepository;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.repository.PaymentRepository;
-import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.PaymentTransferRequest;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.dto.PaymentTransferRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

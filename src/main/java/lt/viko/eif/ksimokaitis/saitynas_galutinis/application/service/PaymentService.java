@@ -3,7 +3,7 @@ package lt.viko.eif.ksimokaitis.saitynas_galutinis.application.service;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.*;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.repository.AccountRepository;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.repository.PaymentRepository;
-import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.PaymentTransferRequest;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.dto.PaymentTransferRequest;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;

@@ -1,4 +1,4 @@
-package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.controller;
+package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.web;
 
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.application.service.AccountService;
 import org.springframework.stereotype.Controller;
@@ -30,3 +30,4 @@ public class AccountModelController {
         return "account-open";
     }
 }
+

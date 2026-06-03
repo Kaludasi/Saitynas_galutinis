@@ -1,7 +1,7 @@
 package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.validator;
 
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.infrastructure.persistence.AppUserJpaRepository;
-import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.RegistrationRequest;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.dto.RegistrationRequest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;

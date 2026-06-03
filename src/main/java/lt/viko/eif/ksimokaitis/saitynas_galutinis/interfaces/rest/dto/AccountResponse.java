@@ -1,4 +1,4 @@
-package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model;
+package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.dto;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -12,3 +12,4 @@ public record AccountResponse(
         LocalDateTime createdAt
 ) {
 }
+
