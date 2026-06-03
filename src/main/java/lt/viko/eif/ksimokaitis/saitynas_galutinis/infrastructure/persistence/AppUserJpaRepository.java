@@ -8,6 +8,8 @@ public interface AppUserJpaRepository extends JpaRepository<AppUserEntity, Long>
 
     Optional<AppUserEntity> findByUsername(String username);
 
+    Optional<AppUserEntity> findById(Long id);
+
     boolean existsByUsername(String username);
 
     boolean existsByEmail(String email);

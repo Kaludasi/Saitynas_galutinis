@@ -11,6 +11,8 @@ import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.PaymentStatus;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.repository.AccountRepository;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.repository.CurrencyExchangeRepository;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.repository.PaymentRepository;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.infrastructure.persistence.AppUserEntity;
+import lt.viko.eif.ksimokaitis.saitynas_galutinis.infrastructure.persistence.AppUserJpaRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -33,6 +35,7 @@ public class CurrencyExchangeService {
     private final AccountRepository accountRepository;
     private final CurrencyExchangeRepository currencyExchangeRepository;
     private final PaymentRepository paymentRepository;
+    private final AppUserJpaRepository appUserJpaRepository;
 
     @Value("${currency.api.key}")
     private String currencyApiKey;
@@ -40,15 +43,17 @@ public class CurrencyExchangeService {
     public CurrencyExchangeService(
             AccountRepository accountRepository,
             CurrencyExchangeRepository currencyExchangeRepository,
-            PaymentRepository paymentRepository
+            PaymentRepository paymentRepository,
+            AppUserJpaRepository appUserJpaRepository
     ) {
         this.accountRepository = accountRepository;
         this.currencyExchangeRepository = currencyExchangeRepository;
         this.paymentRepository = paymentRepository;
+        this.appUserJpaRepository = appUserJpaRepository;
     }
 
     @Transactional
-    public CurrencyExchangeResponse exchange(CurrencyExchangeRequest request) {
+    public CurrencyExchangeResponse exchange(CurrencyExchangeRequest request, String username) {
         if (request.amount() == null || request.amount().compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Amount must be greater than zero");
         }
@@ -61,9 +66,13 @@ public class CurrencyExchangeService {
             throw new IllegalArgumentException("Source and target accounts must be different");
         }
 
-        Account sourceAccount = accountRepository.findById(request.sourceAccountId())
+        Long appUserId = appUserJpaRepository.findByUsername(username)
+                .map(AppUserEntity::getId)
+                .orElseThrow(() -> new IllegalArgumentException("User not found: " + username));
+
+        Account sourceAccount = accountRepository.findByIdAndAppUserId(request.sourceAccountId(), appUserId)
                 .orElseThrow(() -> new IllegalArgumentException("Source account not found"));
-        Account targetAccount = accountRepository.findById(request.targetAccountId())
+        Account targetAccount = accountRepository.findByIdAndAppUserId(request.targetAccountId(), appUserId)
                 .orElseThrow(() -> new IllegalArgumentException("Target account not found"));
 
         if (sourceAccount.getCurrency().equals(targetAccount.getCurrency())) {

@@ -9,3 +9,7 @@ databaseChangeLog:
       file: db/changelog/sql/004-create-accounts-table.sql
   - include:
       file: db/changelog/sql/005-create-currency-exchanges-table.sql
+  - include:
+      file: db/changelog/sql/006-seed-qa-accounts.sql
+  - include:
+      file: db/changelog/sql/007-connect-accounts-to-users.sql

@@ -10,5 +10,9 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
     List<Account> findAllByOrderByCreatedAtDescIdDesc();
 
+    List<Account> findAllByAppUserIdOrderByCreatedAtDescIdDesc(Long appUserId);
+
     Optional<Account> findById(Long id);
+
+    Optional<Account> findByIdAndAppUserId(Long id, Long appUserId);
 }

@@ -6,6 +6,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.security.Principal;
+
 @Controller
 @RequestMapping("/accounts")
 public class AccountModelController {
@@ -17,8 +19,8 @@ public class AccountModelController {
     }
 
     @GetMapping
-    public String showAccounts(Model model) {
-        model.addAttribute("accounts", accountService.getAllAccounts());
+    public String showAccounts(Model model, Principal principal) {
+        model.addAttribute("accounts", accountService.getAccountsForUsername(principal.getName()));
         return "_accounts";
     }
 }

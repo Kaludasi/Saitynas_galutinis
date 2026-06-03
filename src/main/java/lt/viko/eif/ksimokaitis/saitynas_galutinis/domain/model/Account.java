@@ -34,17 +34,21 @@ public class Account {
     @Column(nullable = false, columnDefinition = "char(3)")
     private String currency;
 
+    @Column(name = "app_user_id", nullable = false)
+    private Long appUserId;
+
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
     protected Account() {
     }
 
-    public Account(String iban, String ownerName, BigDecimal balance, String currency, LocalDateTime createdAt) {
+    public Account(String iban, String ownerName, BigDecimal balance, String currency, Long appUserId, LocalDateTime createdAt) {
         this.iban = iban;
         this.ownerName = ownerName;
         this.balance = balance;
         this.currency = currency;
+        this.appUserId = appUserId;
         this.createdAt = createdAt;
     }
 
@@ -89,6 +93,14 @@ public class Account {
 
     public void setCurrency(String currency) {
         this.currency = currency;
+    }
+
+    public Long getAppUserId() {
+        return appUserId;
+    }
+
+    public void setAppUserId(Long appUserId) {
+        this.appUserId = appUserId;
     }
 
     public LocalDateTime getCreatedAt() {
