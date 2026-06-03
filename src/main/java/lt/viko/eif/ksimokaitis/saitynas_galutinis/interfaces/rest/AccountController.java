@@ -1,5 +1,7 @@
 package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.application.service.AccountService;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.Account;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.AccountCurrencyResponse;
@@ -28,6 +30,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/api/accounts")
+@Tag(name = "Accounts", description = "Account queries and account opening")
 public class AccountController {
 
     private static final CacheControl PRIVATE_ACCOUNT_CACHE = CacheControl.noStore().cachePrivate();
@@ -42,6 +45,7 @@ public class AccountController {
     }
 
     @GetMapping
+    @Operation(summary = "List user accounts")
     public ResponseEntity<CollectionModel<EntityModel<AccountResponse>>> getAllAccounts(Principal principal) {
         List<EntityModel<AccountResponse>> accounts = accountService.getAccountsForUsername(principal.getName())
                 .stream()
@@ -58,6 +62,7 @@ public class AccountController {
     }
 
     @GetMapping("/{accountId}")
+    @Operation(summary = "Get account by id")
     public ResponseEntity<EntityModel<AccountResponse>> getAccountById(@PathVariable Long accountId, Principal principal) {
         Account account = accountService.getAccountForUsernameById(principal.getName(), accountId);
         return ResponseEntity.ok()
@@ -67,6 +72,7 @@ public class AccountController {
     }
 
     @PostMapping
+    @Operation(summary = "Open a new account")
     public ResponseEntity<EntityModel<AccountResponse>> openAccount(@RequestBody AccountOpenRequest request, Principal principal) {
         Account account = accountService.openAccountForUsername(principal.getName(), request.getCurrency());
         return ResponseEntity.status(HttpStatus.CREATED)
@@ -76,6 +82,7 @@ public class AccountController {
     }
 
     @GetMapping("/currency/{accountNumber}")
+    @Operation(summary = "Get account currency by IBAN")
     public ResponseEntity<EntityModel<AccountCurrencyResponse>> getAccountCurrency(@PathVariable String accountNumber) {
         String currency = accountService.getCurrencyByAccountNumber(accountNumber);
         AccountCurrencyResponse response = new AccountCurrencyResponse(accountNumber, currency);

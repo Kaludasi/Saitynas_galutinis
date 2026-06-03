@@ -37,7 +37,15 @@ public class SecurityConfiguration {
     SecurityFilterChain webSecurityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authorize -> authorize
-                        .requestMatchers("/login", "/register", "/css/**", "/webjars/**").permitAll()
+                        .requestMatchers(
+                                "/login",
+                                "/register",
+                                "/css/**",
+                                "/webjars/**",
+                                "/swagger-ui.html",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin(form -> form

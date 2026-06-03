@@ -1,6 +1,8 @@
 package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest;
 
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.application.service.CurrencyExchangeService;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.domain.model.CurrencyExchange;
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model.CurrencyExchangeRequest;
@@ -26,6 +28,7 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @RestController
 @RequestMapping("/api/currency")
+@Tag(name = "Currency", description = "Supported currencies and exchange operations")
 public class CurrencyController {
 
     private static final CacheControl PRIVATE_CURRENCY_LIST_CACHE = CacheControl.maxAge(Duration.ofHours(6)).cachePrivate().mustRevalidate();
@@ -46,6 +49,7 @@ public class CurrencyController {
 
 
     @GetMapping("/all")
+    @Operation(summary = "List supported currencies")
     public ResponseEntity<CollectionModel<EntityModel<CurrencyOptionResponse>>> allCurrencies() {
         List<EntityModel<CurrencyOptionResponse>> currencies = currencyExchangeService.getCurrencies()
                 .stream()
@@ -64,6 +68,7 @@ public class CurrencyController {
     }
 
     @GetMapping("/exchanges")
+    @Operation(summary = "List currency exchange history")
     public ResponseEntity<CollectionModel<EntityModel<CurrencyExchangeHistoryResponse>>> getExchangeHistory(Principal principal) {
         List<EntityModel<CurrencyExchangeHistoryResponse>> exchanges = currencyExchangeService.getExchangeHistoryForUsername(principal.getName())
                 .stream()
@@ -80,6 +85,7 @@ public class CurrencyController {
     }
 
     @PostMapping("/exchange")
+    @Operation(summary = "Exchange currency between two user accounts")
     public ResponseEntity<EntityModel<CurrencyExchangeResponse>> exchangeCurrency(
             @RequestBody CurrencyExchangeRequest currencyExchangeRequest,
             Principal principal) {
