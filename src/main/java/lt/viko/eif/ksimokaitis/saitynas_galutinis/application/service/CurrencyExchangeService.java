@@ -14,8 +14,6 @@ import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.dto.CurrencyEx
 import lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.rest.dto.CurrencyExchangeResponse;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -28,18 +26,13 @@ import java.util.Map;
 @Service
 public class CurrencyExchangeService {
 
-    private static final String LATEST_RATES_URL = "https://api.currencyapi.com/v3/latest";
-
     @Getter
     private final List<String> currencies = List.of("EUR", "USD", "GBP", "PLN");
-    private final RestTemplate restTemplate = new RestTemplate();
     private final AccountRepository accountRepository;
     private final CurrencyExchangeRepository currencyExchangeRepository;
     private final PaymentRepository paymentRepository;
     private final AppUserJpaRepository appUserJpaRepository;
-
-    @Value("${currency.api.key}")
-    private String currencyApiKey;
+    private final ExchangeRateService exchangeRateService;
 
     /**
      * Creates the service with repositories needed for balance updates and audit storage.
@@ -48,17 +41,20 @@ public class CurrencyExchangeService {
      * @param currencyExchangeRepository exchange audit persistence gateway
      * @param paymentRepository payment persistence gateway
      * @param appUserJpaRepository user persistence gateway
+     * @param exchangeRateService external exchange rate service
      */
     public CurrencyExchangeService(
             AccountRepository accountRepository,
             CurrencyExchangeRepository currencyExchangeRepository,
             PaymentRepository paymentRepository,
-            AppUserJpaRepository appUserJpaRepository
+            AppUserJpaRepository appUserJpaRepository,
+            ExchangeRateService exchangeRateService
     ) {
         this.accountRepository = accountRepository;
         this.currencyExchangeRepository = currencyExchangeRepository;
         this.paymentRepository = paymentRepository;
         this.appUserJpaRepository = appUserJpaRepository;
+        this.exchangeRateService = exchangeRateService;
     }
 
     /**
@@ -167,27 +163,8 @@ public class CurrencyExchangeService {
         }
     }
 
-    /**
-     * Fetches the latest exchange rate from the external currency API.
-     *
-     * @param sourceCurrency source currency code
-     * @param targetCurrency target currency code
-     * @return exchange rate between the currencies
-     */
     protected BigDecimal fetchExchangeRate(String sourceCurrency, String targetCurrency) {
-        String apiUrl = UriComponentsBuilder
-                .fromUriString(LATEST_RATES_URL)
-                .queryParam("apikey", currencyApiKey)
-                .queryParam("base_currency", sourceCurrency)
-                .queryParam("currencies", targetCurrency)
-                .toUriString();
-
-        CurrencyApiResponse apiResponse = restTemplate.getForObject(apiUrl, CurrencyApiResponse.class);
-        if (apiResponse == null || apiResponse.data() == null || apiResponse.data().get(targetCurrency) == null) {
-            throw new IllegalStateException("Exchange rate is unavailable");
-        }
-
-        return apiResponse.data().get(targetCurrency).value();
+        return exchangeRateService.fetchExchangeRate(sourceCurrency, targetCurrency);
     }
 
     /**

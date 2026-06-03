@@ -45,6 +45,9 @@ class CurrencyExchangeServiceTest {
     @Mock
     private AppUserJpaRepository appUserJpaRepository;
 
+    @Mock
+    private ExchangeRateService exchangeRateService;
+
     @Spy
     @InjectMocks
     private CurrencyExchangeService currencyExchangeService;
@@ -80,7 +83,7 @@ class CurrencyExchangeServiceTest {
         when(accountRepository.save(any(Account.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(currencyExchangeRepository.save(any(CurrencyExchange.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(paymentRepository.save(any(Payment.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        doReturn(new BigDecimal("1.20")).when(currencyExchangeService).fetchExchangeRate("EUR", "USD");
+        when(exchangeRateService.fetchExchangeRate("EUR", "USD")).thenReturn(new BigDecimal("1.20"));
 
         CurrencyExchangeResponse response = currencyExchangeService.exchange(request, "jonas");
 
