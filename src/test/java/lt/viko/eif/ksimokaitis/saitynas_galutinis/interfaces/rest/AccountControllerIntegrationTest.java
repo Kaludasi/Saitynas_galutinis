@@ -66,4 +66,33 @@ class AccountControllerIntegrationTest extends ApiIntegrationTestSupport {
                 .andExpect(jsonPath("$.currency").value("USD"))
                 .andExpect(jsonPath("$.ownerName").value("new.account.user"));
     }
+
+    @Test
+    void getAccountCurrencyReturnsCurrencyForExistingIban() throws Exception {
+        AppUserEntity user = createUser("currency.lookup", "currency.lookup@example.com", "Lookup#2026");
+        createAccount("LT454545454545454545", "currency.lookup", "GBP", BigDecimal.ZERO, user.getId());
+        String token = issueToken("currency.lookup", "Lookup#2026");
+
+        mockMvc.perform(get("/api/accounts/currency/{iban}", "LT454545454545454545")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.accountNumber").value("LT454545454545454545"))
+                .andExpect(jsonPath("$.currency").value("GBP"));
+    }
+
+    @Test
+    void getAccountByIdReturnsBadRequestForForeignAccount() throws Exception {
+        AppUserEntity visibleUser = createUser("owning.user", "owning.user@example.com", "Own#2026");
+        AppUserEntity foreignUser = createUser("foreign.user", "foreign.user@example.com", "Foreign#2026");
+
+        createAccount("LT565656565656565656", "owning.user", "EUR", new BigDecimal("10.00"), visibleUser.getId());
+        Long foreignAccountId = createAccount("LT676767676767676767", "foreign.user", "USD", new BigDecimal("20.00"), foreignUser.getId()).getId();
+
+        String token = issueToken("owning.user", "Own#2026");
+
+        mockMvc.perform(get("/api/accounts/{id}", foreignAccountId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(token)))
+                .andExpect(status().isBadRequest())
+                .andExpect(result -> assertThat(result.getResponse().getContentAsString()).isEqualTo("Account not found"));
+    }
 }

@@ -69,4 +69,47 @@ class PaymentControllerIntegrationTest extends ApiIntegrationTestSupport {
                 .andExpect(jsonPath("$.message").value("Payment was sent successfully"))
                 .andExpect(jsonPath("$.paymentId").isNumber());
     }
+
+    @Test
+    void getPaymentByIdReturnsOnlyVisiblePayment() throws Exception {
+        AppUserEntity user = createUser("payment.viewer", "payment.viewer@example.com", "Viewer#2026");
+        var sender = createAccount("LT202020202020202020", "payment.viewer", "EUR", new BigDecimal("80.00"), user.getId());
+        var receiver = createAccount("LT212121212121212121", "payment.viewer", "EUR", new BigDecimal("5.00"), user.getId());
+        Long paymentId = createPayment(sender.getIban(), receiver.getIban(), new BigDecimal("12.00"), "EUR", PaymentStatus.COMPLETED, "Visible payment details").getId();
+
+        String token = issueToken("payment.viewer", "Viewer#2026");
+
+        mockMvc.perform(get("/api/payments/{id}", paymentId)
+                        .header(HttpHeaders.AUTHORIZATION, bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(paymentId))
+                .andExpect(jsonPath("$.description").value("Visible payment details"));
+    }
+
+    @Test
+    void transferPaymentReturnsBadRequestWhenSenderAccountBelongsToAnotherUser() throws Exception {
+        AppUserEntity actor = createUser("actor.user", "actor.user@example.com", "Actor#2026");
+        AppUserEntity owner = createUser("owner.user", "owner.user@example.com", "Owner#2026");
+
+        createAccount("LT313131313131313131", "owner.user", "EUR", new BigDecimal("40.00"), owner.getId());
+        createAccount("LT323232323232323232", "actor.user", "EUR", BigDecimal.ZERO, actor.getId());
+
+        String token = issueToken("actor.user", "Actor#2026");
+
+        mockMvc.perform(post("/api/payments/transfer")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "senderAccount": "LT313131313131313131",
+                                  "receiverAccount": "LT323232323232323232",
+                                  "amount": 10.00,
+                                  "currency": "EUR",
+                                  "description": "Forbidden transfer"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(result -> assertThat(result.getResponse().getContentAsString())
+                        .isEqualTo("Sender account does not belong to the authorized user"));
+    }
 }
