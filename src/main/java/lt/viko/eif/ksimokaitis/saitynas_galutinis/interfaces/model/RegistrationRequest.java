@@ -1,6 +1,6 @@
 package lt.viko.eif.ksimokaitis.saitynas_galutinis.interfaces.model;
 
-public class RegistrationForm {
+public class RegistrationRequest {
 
     private String username;
     private String email;
